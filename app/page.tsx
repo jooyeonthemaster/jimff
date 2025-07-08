@@ -1,103 +1,223 @@
-import Image from "next/image";
+'use client'
+
+import { useState, useEffect } from 'react'
+import ThreeButton from './components/ThreeButton'
+
+interface Particle {
+  id: number
+  left: string
+  top: string
+  animationDelay: string
+  animationDuration: string
+}
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [currentText, setCurrentText] = useState('')
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [isTyping, setIsTyping] = useState(true)
+  const [particles, setParticles] = useState<Particle[]>([])
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const texts = [
+    "음악으로 정의하는 나,",
+    "영화로 표현하는 감성,",
+    "그리고 나를 기록하는 향수.",
+    "당신만의 시그니처 향을 찾아보세요."
+  ]
+
+  // 파티클 생성 - 클라이언트에서만
+  useEffect(() => {
+    const generatedParticles: Particle[] = [...Array(15)].map((_, i) => ({
+      id: i,
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+      animationDelay: `${Math.random() * 3}s`,
+      animationDuration: `${2 + Math.random() * 3}s`
+    }))
+    setParticles(generatedParticles)
+  }, [])
+
+  useEffect(() => {
+    if (currentIndex < texts.length) {
+      const targetText = texts[currentIndex]
+      
+      if (isTyping && currentText.length < targetText.length) {
+        const timeout = setTimeout(() => {
+          setCurrentText(targetText.slice(0, currentText.length + 1))
+        }, 80)
+        return () => clearTimeout(timeout)
+      } else if (isTyping && currentText.length === targetText.length) {
+        const timeout = setTimeout(() => {
+          setIsTyping(false)
+        }, 2000)
+        return () => clearTimeout(timeout)
+      } else if (!isTyping) {
+        const timeout = setTimeout(() => {
+          if (currentIndex < texts.length - 1) {
+            setCurrentText('')
+            setCurrentIndex(currentIndex + 1)
+            setIsTyping(true)
+          }
+        }, 800)
+        return () => clearTimeout(timeout)
+      }
+    }
+  }, [currentText, currentIndex, isTyping, texts])
+
+  return (
+    <div className="min-h-screen">
+      {/* 포스터 섹션 - 여백 제거를 위한 설정 변경 */}
+      <div 
+        className="relative w-full h-[70vh] overflow-hidden"
+        style={{
+          backgroundImage: 'url(/main.jpg)',
+          backgroundSize: 'cover', // contain → cover로 변경하여 여백 제거
+          backgroundPosition: 'center center',
+          backgroundRepeat: 'no-repeat',
+          backgroundColor: 'transparent' // 배경색을 투명으로 변경
+        }}
+      >
+        {/* 포스터 하단에 그라데이션 오버레이 추가 */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-indigo-900/80 to-transparent"></div>
+        
+        {/* 3D 버튼을 포스터 하단에 절대 위치 */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
+          <ThreeButton 
+            href="/survey/movie-genres" 
+            text="Get started"
+            className="transform hover:scale-105 transition-transform duration-300"
+          />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+      </div>
+
+      {/* 하단 감성 섹션 - 3D 효과 추가 */}
+      <div 
+        className="relative bg-gradient-to-br from-indigo-900 via-purple-800 to-slate-900 text-white overflow-hidden"
+        style={{
+          transform: 'perspective(1000px) rotateX(2deg)',
+          transformOrigin: 'top center'
+        }}
+      >
+        {/* 3D 배경 레이어들 - 클라이언트에서만 렌더링 */}
+        <div className="absolute inset-0 opacity-20">
+          {/* 떠다니는 파티클들 */}
+          {particles.map((particle) => (
+            <div
+              key={particle.id}
+              className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
+              style={{
+                left: particle.left,
+                top: particle.top,
+                animationDelay: particle.animationDelay,
+                animationDuration: particle.animationDuration
+              }}
+            />
+          ))}
+        </div>
+
+        {/* 3D 기하학적 패턴 */}
+        <div className="absolute inset-0 opacity-10">
+          <div 
+            className="absolute top-10 left-10 w-32 h-32 border border-white/30 rounded-full"
+            style={{ transform: 'rotateX(45deg) rotateY(45deg)' }}
+          ></div>
+          <div 
+            className="absolute top-32 right-20 w-16 h-16 border border-white/30"
+            style={{ transform: 'rotateX(30deg) rotateZ(45deg)' }}
+          ></div>
+          <div 
+            className="absolute bottom-20 left-32 w-24 h-24 border border-white/30 rounded-full"
+            style={{ transform: 'rotateY(60deg) rotateX(30deg)' }}
+          ></div>
+          <div 
+            className="absolute bottom-10 right-10 w-40 h-40 border border-white/30"
+            style={{ transform: 'rotateX(45deg) rotateY(45deg)' }}
+          ></div>
+        </div>
+
+        <div 
+          className="relative z-10 max-w-[380px] mx-auto px-8 py-16 text-center"
+          style={{
+            transform: 'translateZ(50px)',
+            filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.3))'
+          }}
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          {/* 타자기 효과 텍스트 - 글로우 효과 제거 */}
+          <div className="h-40 flex items-center justify-center mb-12">
+            <div className="relative">
+              <p className="text-xl font-light leading-relaxed tracking-wide">
+                {currentText}
+                <span className="animate-pulse text-purple-300">|</span>
+              </p>
+            </div>
+          </div>
+
+          {/* 프로세스 타임라인 - 3D 효과 추가 */}
+          <div className="space-y-8">
+            <h3 className="text-lg font-semibold text-purple-200 mb-8">
+              AI 향수 큐레이션 프로세스
+            </h3>
+            
+            <div className="relative">
+              {/* 3D 연결선 */}
+              <div 
+                className="absolute left-4 top-8 bottom-0 w-0.5 bg-gradient-to-b from-purple-400 to-blue-400"
+                style={{
+                  transform: 'rotateY(5deg)',
+                  boxShadow: '2px 0 10px rgba(139, 92, 246, 0.3)'
+                }}
+              ></div>
+              
+              {[
+                { icon: "🎬", title: "영화 장르 선택", desc: "선호 장르로 성향 분석" },
+                { icon: "🎵", title: "음악 취향 분석", desc: "YouTube 링크로 음악 DNA 추출" },
+                { icon: "🌸", title: "향 계열 선택", desc: "후각 선호도 매핑" },
+                { icon: "🔮", title: "AI 맞춤 추천", desc: "AI 향수 큐레이션" }
+              ].map((step, index) => (
+                <div 
+                  key={index} 
+                  className="relative flex items-start space-x-4 pb-8"
+                  style={{
+                    transform: `translateZ(${20 - index * 5}px) rotateY(${index * 2}deg)`,
+                    transition: 'transform 0.3s ease'
+                  }}
+                >
+                  <div 
+                    className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-sm font-bold"
+                    style={{
+                      boxShadow: '0 4px 15px rgba(139, 92, 246, 0.4)',
+                      transform: 'translateZ(10px)'
+                    }}
+                  >
+                    {step.icon}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <h4 className="font-medium text-white mb-1">{step.title}</h4>
+                    <p className="text-sm text-gray-300">{step.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 하단 브랜딩 - AI로 변경 */}
+          <div 
+            className="mt-16 pt-8 border-t border-white/10"
+            style={{
+              transform: 'translateZ(30px)',
+              textShadow: '0 2px 10px rgba(0,0,0,0.5)'
+            }}
+          >
+            <div className="flex items-center justify-center space-x-2 text-sm text-gray-400">
+              <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+              <span>Powered by AI & Your Unique Taste</span>
+              <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              JIMFF × AI Perfume Curation
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
-  );
+  )
 }

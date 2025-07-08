@@ -1,0 +1,9 @@
+# Gemini AI API 설정
+GEMINI_API_KEY=AIzaSyAlH_l4pN_2Hp640_awBIfLbgmaGOpmbLE
+
+# YouTube API 설정 (향후 사용)
+YOUTUBE_API_KEY=your_youtube_api_key_here
+
+# Next.js 설정
+NEXT_PUBLIC_APP_NAME=JIMFF
+NEXT_PUBLIC_APP_DESCRIPTION=AI 기반 취향 분석 및 향 추천 서비스 
