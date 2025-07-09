@@ -39,7 +39,6 @@ export default function SurveyLayout({ children, showMusicEffect = false }: Surv
     const frequencyBands = 64; // 이퀄라이저 바 개수
     const bassRange = 8; // 저음 대역
     const midRange = 24; // 중음 대역
-    const trebleRange = 32; // 고음 대역
     
          const drawFrequencyVisualizer = () => {
        // 완전한 검은색 배경
