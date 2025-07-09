@@ -254,7 +254,7 @@ export default function MusicRecommendationsPage() {
 
   if (loading) {
     return (
-      <SurveyLayout>
+      <SurveyLayout showMusicEffect={true}>
         <div className="w-full max-w-[380px] text-center">
           <div 
             className="inline-block w-16 h-16 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin"
@@ -268,7 +268,7 @@ export default function MusicRecommendationsPage() {
 
   if (error || !analysisData) {
     return (
-      <SurveyLayout>
+      <SurveyLayout showMusicEffect={true}>
         <div className="w-full max-w-[380px] text-center space-y-6">
           <div className="text-6xl">😕</div>
           <h2 className="text-xl font-bold text-white">{error}</h2>
@@ -284,7 +284,7 @@ export default function MusicRecommendationsPage() {
   }
 
   return (
-    <SurveyLayout>
+    <SurveyLayout showMusicEffect={true}>
       <div className="w-full max-w-[380px] space-y-12">
         {/* 완료 헤더 */}
         <div className="text-center space-y-4">
@@ -307,7 +307,7 @@ export default function MusicRecommendationsPage() {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
             AI 향수 분석 완료
           </h1>
-          <p className="text-white/80">당신만의 시그니처 향을 찾았습니다</p>
+          <p className="text-white/80">당신의 시그니처 향을 찾았습니다</p>
         </div>
 
         {/* 성격 분석 섹션 */}

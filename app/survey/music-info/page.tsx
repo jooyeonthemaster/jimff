@@ -231,7 +231,7 @@ export default function MusicInfoPage() {
   const canProceed = musicTitle.trim() !== '' || musicArtist.trim() !== ''
 
   return (
-    <SurveyLayout>
+    <SurveyLayout showMusicEffect={true}>
       {/* 음파 파티클 효과 */}
       <AudioWaveParticles />
       
