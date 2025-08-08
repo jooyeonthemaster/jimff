@@ -6,9 +6,7 @@ import SurveyLayout from '../../components/SurveyLayout'
 import ProgressIndicator from '../../components/ProgressIndicator'
 
 export default function PersonalExpressionPage() {
-  const [movieMeaning, setMovieMeaning] = useState('')
-  const [musicMeaning, setMusicMeaning] = useState('')
-  const [personalDescription, setPersonalDescription] = useState('')
+  const [emotionalResponse, setEmotionalResponse] = useState('')
   const [loading, setLoading] = useState(false)
   const [analysisError, setAnalysisError] = useState<string | null>(null)
   const router = useRouter()
@@ -18,9 +16,7 @@ export default function PersonalExpressionPage() {
     const savedData = localStorage.getItem('surveyData')
     if (savedData) {
       const data = JSON.parse(savedData)
-      setMovieMeaning(data.movieMeaning || '')
-      setMusicMeaning(data.musicMeaning || '')
-      setPersonalDescription(data.personalDescription || '')
+      setEmotionalResponse(data.emotionalResponse || '')
     }
   }, [])
 
@@ -31,9 +27,7 @@ export default function PersonalExpressionPage() {
     
     const updatedData = {
       ...existingData,
-      movieMeaning,
-      musicMeaning,
-      personalDescription
+      emotionalResponse
     }
     
     localStorage.setItem('surveyData', JSON.stringify(updatedData))
@@ -42,10 +36,7 @@ export default function PersonalExpressionPage() {
 
   // AI 분석 호출 및 완료 처리
   const handleComplete = async () => {
-    if (!movieMeaning.trim() || !musicMeaning.trim() || !personalDescription.trim()) {
-      setAnalysisError('모든 질문에 답변해주세요.')
-      return
-    }
+    // 입력 검증 제거 - 선택사항으로 변경
 
     setLoading(true)
     setAnalysisError(null)
@@ -54,13 +45,21 @@ export default function PersonalExpressionPage() {
       // 최종 데이터 저장
       const finalData = saveData()
       
+      // 유튜브 추출 정보가 있다면 함께 전달
+                        const dataWithExtracted = {
+                    ...finalData,
+                    extractedMusicTitle: finalData.extractedMusicTitle || null,
+                    extractedMusicArtist: finalData.extractedMusicArtist || null,
+                    movieTitle: finalData.movieTitle || null
+                  }
+      
       // API 호출
       const response = await fetch('/api/analyze-preferences', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(finalData),
+        body: JSON.stringify(dataWithExtracted),
       })
 
       const result = await response.json()
@@ -88,7 +87,7 @@ export default function PersonalExpressionPage() {
     router.push('/survey/fragrance-preferences')
   }
 
-  const isValid = movieMeaning.trim() && musicMeaning.trim() && personalDescription.trim()
+  const isValid = true // 항상 활성화
 
   if (loading) {
     return (
@@ -98,21 +97,20 @@ export default function PersonalExpressionPage() {
           
           <div className="space-y-6">
             <div 
-              className="inline-block w-20 h-20 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin"
+              className="inline-block"
               style={{ transform: 'perspective(300px) rotateX(10deg)' }}
-            />
+            >
+              <div 
+                className="w-20 h-20 border-4 border-purple-500/30 border-t-purple-500 rounded-full"
+                style={{ animation: 'spin 1s linear infinite' }}
+              />
+            </div>
             
             <div className="space-y-3">
               <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
                 AI 분석 진행 중
               </h2>
-              <div className="space-y-2 text-white/80">
-                <p className="text-sm">🧠 성격 특성 분석 중...</p>
-                <p className="text-sm">🎬 영화 취향 해석 중...</p>
-                <p className="text-sm">🎵 음악 취향 분석 중...</p>
-                <p className="text-sm">💎 맞춤 향수 추천 중...</p>
-              </div>
-              <p className="text-purple-300 text-xs">잠시만 기다려주세요. 곧 결과가 나옵니다!</p>
+              <p className="text-purple-300 text-xs">잠시만 기다려주세요.</p>
             </div>
           </div>
         </div>
@@ -144,7 +142,7 @@ export default function PersonalExpressionPage() {
         </div>
 
         <div className="space-y-6">
-          {/* 영화 의미 */}
+          {/* 통합된 감정 질문 */}
           <div 
             className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 space-y-4"
             style={{
@@ -154,71 +152,17 @@ export default function PersonalExpressionPage() {
           >
             <div className="space-y-2">
               <label className="block text-white font-medium text-sm">
-                🎬 선택한 영화 장르가 당신에게 의미하는 것은?
+                선택한 영화 음악을 경험할 때, 어떤 감정이 느껴지시나요?
               </label>
               <p className="text-white/60 text-xs">
-                왜 그 장르를 좋아하는지, 그 장르에서 무엇을 느끼는지 자유롭게 써주세요
+                좋아하는 영화를 보거나 음악을 들을 때의 감정, 그때 떠오르는 생각이나 기억을 자유롭게 표현해주세요 (선택사항)
               </p>
             </div>
             <textarea
-              value={movieMeaning}
-              onChange={(e) => setMovieMeaning(e.target.value)}
-              placeholder="예) 로맨스 영화를 보면 따뜻한 감정과 희망을 느껴요. 현실에서 경험하기 어려운 순수한 사랑을 간접적으로 체험할 수 있어서 좋아합니다..."
-              className="w-full h-24 bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white text-sm placeholder-white/40 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 resize-none"
-              style={{
-                transform: 'perspective(500px) rotateX(1deg)',
-              }}
-            />
-          </div>
-
-          {/* 음악 의미 */}
-          <div 
-            className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 space-y-4"
-            style={{
-              transform: 'perspective(1000px) rotateX(2deg) translateZ(10px)',
-              boxShadow: '0 15px 35px rgba(0, 0, 0, 0.2), 0 5px 15px rgba(139, 92, 246, 0.1)'
-            }}
-          >
-            <div className="space-y-2">
-              <label className="block text-white font-medium text-sm">
-                🎵 선택한 음악이 당신에게 의미하는 것은?
-              </label>
-              <p className="text-white/60 text-xs">
-                그 음악을 들을 때의 감정, 특별한 기억이나 의미를 알려주세요
-              </p>
-            </div>
-            <textarea
-              value={musicMeaning}
-              onChange={(e) => setMusicMeaning(e.target.value)}
-              placeholder="예) 이 노래를 들으면 대학시절이 생각나요. 친구들과 함께했던 즐거운 순간들이 떠오르고, 그때의 자유롭고 순수했던 마음을 다시 느낄 수 있어서..."
-              className="w-full h-24 bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white text-sm placeholder-white/40 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 resize-none"
-              style={{
-                transform: 'perspective(500px) rotateX(1deg)',
-              }}
-            />
-          </div>
-
-          {/* 개인 표현 */}
-          <div 
-            className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 space-y-4"
-            style={{
-              transform: 'perspective(1000px) rotateX(2deg) translateZ(10px)',
-              boxShadow: '0 15px 35px rgba(0, 0, 0, 0.2), 0 5px 15px rgba(139, 92, 246, 0.1)'
-            }}
-          >
-            <div className="space-y-2">
-              <label className="block text-white font-medium text-sm">
-                💭 이런 취향을 가진 당신은 어떤 사람인가요?
-              </label>
-              <p className="text-white/60 text-xs">
-                자신을 어떻게 표현하고 싶은지, 어떤 사람으로 보이고 싶은지 말해주세요
-              </p>
-            </div>
-            <textarea
-              value={personalDescription}
-              onChange={(e) => setPersonalDescription(e.target.value)}
-              placeholder="예) 저는 감성적이면서도 현실적인 사람이에요. 일상에서는 차분하지만 혼자만의 시간에는 꿈꾸는 것을 좋아해요. 사람들과 깊이 있는 대화를 나누는 것을 좋아하고..."
-              className="w-full h-32 bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white text-sm placeholder-white/40 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 resize-none"
+              value={emotionalResponse}
+              onChange={(e) => setEmotionalResponse(e.target.value)}
+              placeholder="예) 좋아하는 음악을 들으면 마음이 편안해지고 과거의 좋은 기억들이 떠올라요. 특히 친구들과 함께했던 순간들이나 행복했던 시절이 생각나면서 따뜻한 감정을 느껴요. 영화를 볼 때도 비슷해서 감동적인 장면에서는 눈물이 나기도 하고, 주인공에게 감정이입하면서 새로운 관점을 얻게 되는 것 같아요..."
+              className="w-full h-40 bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white text-sm placeholder-white/40 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 resize-none"
               style={{
                 transform: 'perspective(500px) rotateX(1deg)',
               }}

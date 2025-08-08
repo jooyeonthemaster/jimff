@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import ThreeButton from './components/ThreeButton'
 
 interface Particle {
@@ -12,17 +12,59 @@ interface Particle {
 }
 
 export default function Home() {
-  const [currentText, setCurrentText] = useState('')
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isTyping, setIsTyping] = useState(true)
   const [particles, setParticles] = useState<Particle[]>([])
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [isForward, setIsForward] = useState(true)
 
-  const texts = [
-    "음악으로 정의하는 나,",
-    "영화로 표현하는 감성,",
-    "그리고 나를 기록하는 향수.",
-    "당신의 시그니처 향을 찾아보세요."
-  ]
+  // 비디오 재생-역재생 로직
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    let reverseAnimationId: number | null = null
+
+    const reversePlay = () => {
+      if (video.currentTime <= 0) {
+        // 역재생 완료 → 정방향 재생 시작
+        setIsForward(true)
+        video.currentTime = 0
+        video.play()
+        return
+      }
+      
+      // currentTime을 점진적으로 감소 (역재생 효과)
+      video.currentTime = Math.max(0, video.currentTime - 0.033) // ~30fps
+      reverseAnimationId = requestAnimationFrame(reversePlay)
+    }
+
+    const handleVideoEnd = () => {
+      if (isForward) {
+        // 정방향 끝 → 역방향 시작
+        video.pause()
+        setIsForward(false)
+        reversePlay()
+      }
+    }
+
+    const handlePlay = () => {
+      // 정방향 재생 시작 시 역재생 애니메이션 정리
+      if (reverseAnimationId) {
+        cancelAnimationFrame(reverseAnimationId)
+        reverseAnimationId = null
+      }
+    }
+
+    video.addEventListener('ended', handleVideoEnd)
+    video.addEventListener('play', handlePlay)
+
+    return () => {
+      video.removeEventListener('ended', handleVideoEnd)
+      video.removeEventListener('play', handlePlay)
+      if (reverseAnimationId) {
+        cancelAnimationFrame(reverseAnimationId)
+      }
+    }
+  }, [isForward])
 
   // 파티클 생성 - 클라이언트에서만
   useEffect(() => {
@@ -36,51 +78,40 @@ export default function Home() {
     setParticles(generatedParticles)
   }, [])
 
-  useEffect(() => {
-    if (currentIndex < texts.length) {
-      const targetText = texts[currentIndex]
-      
-      if (isTyping && currentText.length < targetText.length) {
-        const timeout = setTimeout(() => {
-          setCurrentText(targetText.slice(0, currentText.length + 1))
-        }, 80)
-        return () => clearTimeout(timeout)
-      } else if (isTyping && currentText.length === targetText.length) {
-        const timeout = setTimeout(() => {
-          setIsTyping(false)
-        }, 2000)
-        return () => clearTimeout(timeout)
-      } else if (!isTyping) {
-        const timeout = setTimeout(() => {
-          if (currentIndex < texts.length - 1) {
-            setCurrentText('')
-            setCurrentIndex(currentIndex + 1)
-            setIsTyping(true)
-          }
-        }, 800)
-        return () => clearTimeout(timeout)
-      }
-    }
-  }, [currentText, currentIndex, isTyping, texts])
+
 
   return (
     <div className="min-h-screen">
-      {/* 포스터 섹션 - 여백 제거를 위한 설정 변경 */}
-      <div 
-        className="relative w-full h-[70vh] overflow-hidden"
-        style={{
-          backgroundImage: 'url(/main.jpg)',
-          backgroundSize: 'cover', // contain → cover로 변경하여 여백 제거
-          backgroundPosition: 'center center',
-          backgroundRepeat: 'no-repeat',
-          backgroundColor: 'transparent' // 배경색을 투명으로 변경
-        }}
-      >
-        {/* 포스터 하단에 그라데이션 오버레이 추가 */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-indigo-900/80 to-transparent"></div>
+      {/* 포스터 섹션 - 비디오 배경 */}
+      <div className="relative w-full h-[70vh] overflow-hidden">
+        {/* 배경 비디오 */}
+        <video
+          ref={videoRef}
+          className="absolute inset-0 w-full h-full object-cover"
+          autoPlay
+          muted
+          playsInline
+        >
+          <source src="/main.mp4" type="video/mp4" />
+          {/* 비디오 로드 실패 시 대체 이미지 */}
+          <div 
+            className="absolute inset-0 w-full h-full"
+            style={{
+              backgroundImage: 'url(/main.JPG)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center center',
+              backgroundRepeat: 'no-repeat'
+            }}
+          />
+        </video>
         
-        {/* 3D 버튼을 포스터 하단에 절대 위치 */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
+        {/* 포스터 하단에 그라데이션 오버레이 추가 */}
+        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-indigo-900/90 to-transparent"></div>
+      </div>
+
+      {/* 3D 버튼 섹션 */}
+      <div className="py-16 bg-gradient-to-b from-indigo-900/90 via-purple-900/50 to-purple-900/70">
+        <div className="flex justify-center">
           <ThreeButton 
             href="/survey/movie-genres" 
             text="Get started"
@@ -91,7 +122,7 @@ export default function Home() {
 
       {/* 하단 감성 섹션 - 3D 효과 추가 */}
       <div 
-        className="relative bg-gradient-to-br from-indigo-900 via-purple-800 to-slate-900 text-white overflow-hidden"
+        className="relative bg-gradient-to-br from-purple-900/70 via-purple-800 to-slate-900 text-white overflow-hidden"
         style={{
           transform: 'perspective(1000px) rotateX(2deg)',
           transformOrigin: 'top center'
@@ -141,20 +172,12 @@ export default function Home() {
             filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.3))'
           }}
         >
-          {/* 타자기 효과 텍스트 - 글로우 효과 제거 */}
-          <div className="h-40 flex items-center justify-center mb-12">
-            <div className="relative">
-              <p className="text-xl font-light leading-relaxed tracking-wide">
-                {currentText}
-                <span className="animate-pulse text-purple-300">|</span>
-              </p>
-            </div>
-          </div>
+
 
           {/* 프로세스 타임라인 - 3D 효과 추가 */}
           <div className="space-y-8">
             <h3 className="text-lg font-semibold text-purple-200 mb-8">
-              AI 향수 큐레이션 프로세스
+              JIMFF X AC&apos;SCENT AI 조향사
             </h3>
             
             <div className="relative">
@@ -209,7 +232,7 @@ export default function Home() {
           >
             <div className="flex items-center justify-center space-x-2 text-sm text-gray-400">
               <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
-              <span>Powered by AI & Your Unique Taste</span>
+              <span>Powered by NEANDER Corporation</span>
               <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
             </div>
             <p className="text-xs text-gray-500 mt-2">

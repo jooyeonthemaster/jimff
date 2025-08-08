@@ -5,14 +5,17 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
 interface PreferenceData {
   movieGenres: string[]
+  movieTitle?: string
+  movieTrailerUrl?: string
   musicTitle: string
-  musicArtist: string
-  youtubeLink: string
+  musicYoutubeUrl?: string
+  youtubeLink?: string // 하위 호환성을 위해 유지
+  musicArtist?: string // 하위 호환성을 위해 유지
+  extractedMusicTitle?: string
+  extractedMusicArtist?: string
   likedFragrances: string[]
   dislikedFragrances: string[]
-  musicMeaning: string
-  movieMeaning: string
-  personalDescription: string
+  emotionalResponse: string
 }
 
 interface FragranceRecommendation {
@@ -27,28 +30,73 @@ interface FragranceRecommendation {
   season: string
   reasonForRecommendation: string
   psychologicalMatch: string
+  // 새로운 필드 추가
+  customPerfumeName: string // 영화 감성에 맞는 향수 이름
+  fragranceRecipe: {
+    topNote: {
+      id: string
+      name: string
+      ratio: number // g 단위
+    }
+    middleNote: {
+      id: string
+      name: string
+      ratio: number // g 단위
+    }
+    baseNote: {
+      id: string
+      name: string
+      ratio: number // g 단위
+    }
+  }
+  // 방사형 그래프용 향수 전문 척도값 추가
+  radarChart: {
+    부드러움: number      // 1-10 척도 (Softness)
+    강렬함: number        // 1-10 척도 (Intensity)
+    신선함: number        // 1-10 척도 (Freshness)
+    따뜻함: number        // 1-10 척도 (Warmth)
+    달콤함: number        // 1-10 척도 (Sweetness)
+    우디함: number        // 1-10 척도 (Woodiness)
+    플로럴함: number      // 1-10 척도 (Florality)
+    스파이시함: number    // 1-10 척도 (Spiciness)
+    깊이감: number        // 1-10 척도 (Depth)
+    개성감: number        // 1-10 척도 (Uniqueness)
+  }
 }
 
 interface AnalysisResult {
-  personalityAnalysis: {
-    corePersonality: string
-    emotionalDepth: string
-    socialTendency: string
-    aestheticPreference: string
-    lifestylePattern: string
+  analyzedMusic: {
+    title: string
+    artist: string
+    correctionNote?: string
+    // 전문 음악 분석 추가
+    genre: string
+    characteristics: string
+    emotionalTone: string
+    theme: string
+    musicalComposition: string
+    backgroundStory: string
+    symbolKeywords?: string[] // 음악을 상징하는 키워드들
+  }
+  analyzedMovie?: { // Added
+    title: string
+    director: string
+    year?: string
+    genre: string[]
+    description: string
   }
   movieAnalysis: {
-    psychologicalDriver: string
-    emotionalNeeds: string
-    cognitiveStyle: string
-    escapismPattern: string
+    symbolKeywords: string[] // 영화를 상징하는 키워드들
+    genreMatching: {
+      score: number // 1-10점 매칭 점수
+      isMatched: boolean // 매칭 여부
+      explanation: string // 매칭/불일치 설명
+    }
+    cinematicFeatures: string // 영화적 특성 (시각적, 연출적)
+    emotionalResonance: string // 감정적 공명도
+    coreThemes: string // 핵심 테마와 메시지
   }
-  musicAnalysis: {
-    emotionalResonance: string
-    memoryAssociation: string
-    energyAlignment: string
-    identityExpression: string
-  }
+
   fragranceRecommendations: FragranceRecommendation[]
   lifestyleAdvice: {
     dailyRoutine: string
@@ -62,83 +110,312 @@ export async function POST(request: NextRequest) {
   try {
     const data: PreferenceData = await request.json()
 
+    // 디버깅을 위한 로깅
+    console.log('=== 음악 정보 디버깅 ===')
+    console.log('사용자 입력:', {
+      title: data.musicTitle,
+      artist: data.musicArtist
+    })
+    console.log('유튜브 추출:', {
+      title: data.extractedMusicTitle,
+      artist: data.extractedMusicArtist
+    })
+    console.log('========================')
+
+    // 향료 데이터 로드
+    const fragranceData = {
+      top: [
+        { id: "AC'SCENT 01", name: "블랙베리" },
+        { id: "AC'SCENT 02", name: "만다린 오렌지" },
+        { id: "AC'SCENT 03", name: "스트로베리" },
+        { id: "AC'SCENT 04", name: "베르가못" },
+        { id: "AC'SCENT 05", name: "비터 오렌지" },
+        { id: "AC'SCENT 06", name: "캐럿" },
+        { id: "AC'SCENT 07", name: "로즈" },
+        { id: "AC'SCENT 08", name: "튜베로즈" },
+        { id: "AC'SCENT 09", name: "오렌지 블라썸" },
+        { id: "AC'SCENT 10", name: "튤립" }
+      ],
+      middle: [
+        { id: "AC'SCENT 11", name: "라임" },
+        { id: "AC'SCENT 12", name: "은방울꽃" },
+        { id: "AC'SCENT 13", name: "유자" },
+        { id: "AC'SCENT 14", name: "민트" },
+        { id: "AC'SCENT 15", name: "페티그레인" },
+        { id: "AC'SCENT 16", name: "샌달우드" },
+        { id: "AC'SCENT 17", name: "레몬페퍼" },
+        { id: "AC'SCENT 18", name: "핑크페퍼" },
+        { id: "AC'SCENT 19", name: "바다소금" },
+        { id: "AC'SCENT 20", name: "타임" }
+      ],
+      base: [
+        { id: "AC'SCENT 21", name: "머스크" },
+        { id: "AC'SCENT 22", name: "화이트로즈" },
+        { id: "AC'SCENT 23", name: "스웨이드" },
+        { id: "AC'SCENT 24", name: "이탈리안만다린" },
+        { id: "AC'SCENT 25", name: "라벤더" },
+        { id: "AC'SCENT 26", name: "이탈리안사이프러스" },
+        { id: "AC'SCENT 27", name: "스모키 블렌드 우드" },
+        { id: "AC'SCENT 28", name: "레더" },
+        { id: "AC'SCENT 29", name: "바이올렛" },
+        { id: "AC'SCENT 30", name: "무화과" }
+      ]
+    }
+
     const prompt = `
-당신은 세계적인 향수 전문가이자 심리 분석가입니다. 20년 이상의 경험을 바탕으로 다음 사용자의 깊이 있는 분석을 진행해주세요.
+당신은 세계적인 향수 전문가입니다. 20년 이상의 경험을 바탕으로 다음 사용자의 영화/음악 취향을 분석하여 맞춤 향수를 추천해주세요.
+
+**🇰🇷 CRITICAL: 모든 응답은 반드시 한국어로 작성하세요. 절대 영어나 다른 언어를 사용하지 마세요.**
 
 [사용자 데이터]
 선호 영화 장르: ${data.movieGenres?.join(', ') || '정보 없음'}
-좋아하는 음악: ${data.musicTitle ? `${data.musicTitle} - ${data.musicArtist}` : '정보 없음'}
+언급한 영화 제목: ${data.movieTitle || '정보 없음'}
+영화 예고편 YouTube 링크: ${data.movieTrailerUrl || '정보 없음'}
+
+[음악 정보 분석]
+사용자 입력 음악 제목: ${data.musicTitle || '정보 없음'}
+음악 YouTube 링크: ${data.musicYoutubeUrl || '정보 없음'}
+
 선호 향 계열: ${data.likedFragrances?.join(', ') || '정보 없음'}
 비선호 향 계열: ${data.dislikedFragrances?.join(', ') || '정보 없음'}
-음악의 개인적 의미: ${data.musicMeaning || '정보 없음'}
-영화 장르의 개인적 의미: ${data.movieMeaning || '정보 없음'}
-자기 표현: ${data.personalDescription || '정보 없음'}
+감정적 반응: ${data.emotionalResponse || '정보 없음'}
+
+[영화 정보 분석 규칙]
+1. 사용자가 영화 제목을 제공한 경우:
+   - **1단계: 실제 영화 지식 확인** - 해당 영화에 대해 실제로 알고 있는지 먼저 확인
+   - **2단계: 알고 있는 경우** - 정확한 정보 제공 (감독, 출시년도, 장르, 줄거리)
+   - **3단계: 부분적으로 아는 경우** - 확실한 정보만 제공, 불확실한 부분은 "미상"
+   - **4단계: 전혀 모르는 경우** - 모든 필드를 "미상"으로 설정
+   - ⚠️ **절대 추정하지 말 것** - 국가, 감독, 연도 등을 임의로 추정하지 말고 정확히 아는 것만 기입
+   - 장르만 제목에서 명확히 유추 가능한 경우에만 포함 (예: "로맨스", "공포" 등의 명시적 키워드)
+
+2. 🎬 **영화 예고편 YouTube 링크 활용**:
+   - YouTube 링크가 제공된 경우, 예고편을 통해 파악할 수 있는 다음 정보들을 적극 활용하여 분석의 깊이를 높이세요:
+   - **시각적 특성**: 색감, 촬영 기법, 미장센, 장면 구성의 특징
+   - **분위기**: 예고편에서 느껴지는 전반적인 톤 & 매너 (어둠, 밝음, 긴장감, 로맨틱 등)
+   - **장르적 특성**: 예고편에서 드러나는 장르적 클리셰와 특징들
+   - **감정적 어필**: 예고편이 관객에게 유발하려는 감정과 반응
+   - **음악적 요소**: 예고편 배경음악이나 사운드 디자인의 특성
+   - 이러한 예고편 분석을 바탕으로 향수 추천에 더욱 구체적이고 정확한 감성 매칭을 진행하세요
+2. 영화 제목이 제공되지 않은 경우:
+   - analyzedMovie는 null로 설정
+
+[음악 정보 분석 규칙]
+1. 🎵 **음악 YouTube 링크 활용**:
+   - YouTube 링크가 제공된 경우, 해당 음악의 다음 특성들을 자세히 분석하세요:
+   - **음향적 특성**: 악기 구성, 음색, 음압, 주파수 특성
+   - **프로덕션 기법**: 믹싱, 마스터링, 음향 효과 사용
+   - **보컬 스타일**: 창법, 감정 표현, 성량과 톤의 특징
+   - **리듬 패턴**: BPM, 그루브, 박자감의 특성
+   - **하모니 구조**: 코드 진행, 멜로디 라인, 음악적 긴장과 해결
+   - **장르적 정체성**: 세부 장르 분류와 음악적 뿌리
+   - 이러한 음악적 분석을 바탕으로 향수의 후각적 경험과 연결하여 더욱 정확한 매칭을 진행하세요
+
+2. 사용자 직접 입력 음악 제목만 있는 경우:
+   - 해당 곡에 대한 음악적 지식을 바탕으로 분석
+   - 모르는 곡인 경우 솔직하게 일반적인 분석 진행
+
+[음악 분석 주의사항]
+- 음악 제목과 아티스트명은 정확한 실제 곡명과 가수명을 사용
+- 영화 감독명이나 "영화 사운드트랙" 같은 잘못된 정보 사용 금지
+- OST나 사운드트랙인 경우에도 실제 곡을 부른 가수명을 명시
+
+[전문 음악 분석 가이드라인]
+당신은 이제 세계적인 음악 비평가이기도 합니다. 다음 항목들을 전문가 수준으로 깊이 있게 분석하세요:
+
+1. 상징 키워드: 해당 음악을 대표하는 5-8개의 핵심 키워드 추출 (장르, 분위기, 감정, 특징적 요소 등)
+2. 장르와 특성: 단순한 장르 분류가 아닌, 세부 서브장르, 음악적 뿌리, 독특한 특징
+3. 감정선과 분위기: 곡 전체의 감정적 아크, 분위기 변화, 리스너에게 주는 심리적 영향
+4. 노래의 주제: 가사와 멜로디가 전달하는 핵심 메시지, 숨겨진 의미, 사회적/개인적 함의
+5. 음악적 구성: 편곡, 악기 구성, 리듬 패턴, 하모니 구조, 프로덕션 기법
+6. 배경 스토리: 곡의 탄생 배경, 아티스트의 의도, 문화적/역사적 맥락
+
+※ 절대 일반론적이거나 뻔한 분석 금지. 각 곡의 고유한 특성을 파고들어 분석할 것.
 
 [분석 요구사항]
 다음 JSON 구조로 정확히 응답해주세요. 절대 마크다운이나 추가 텍스트 없이 순수 JSON만 반환하세요.
 
-영화 장르 분석 시 고려사항:
-- 코미디: 사회적 연결 욕구, 긍정적 에너지 추구, 스트레스 해소 패턴
-- 로맨스: 감정적 깊이, 이상화 경향, 인간관계에 대한 믿음
-- 공포/스릴러: 아드레날린 추구, 통제 욕구, 현실 도피 성향
-- 판타지/SF: 상상력, 현실 불만족, 미래 지향적 사고
-- 뮤지컬: 감성적 표현 욕구, 예술적 성향, 집단 소속감
-- 느와르/갱스터: 복잡성 추구, 도덕적 모호함 수용, 권력에 대한 관심
+**🚨 MANDATORY: 모든 JSON 필드 값은 반드시 한국어로 작성하세요. 영어 응답 절대 금지!**
 
-음악 분석 시 고려사항:
-- 장르별 심리적 특성 (팝, 록, 발라드, 힙합, 클래식 등)
-- 가사의 감정적 메시지
-- 리듬과 멜로디가 주는 에너지
-- 개인적 기억과의 연관성
-- 정체성 표현 방식
+[영화 분석 가이드라인]
+당신은 이제 전문 영화 비평가이기도 합니다. 다음 항목들을 분석하세요:
 
-향수 추천 시 고려사항:
-- 사용자가 싫어하는 향 계열은 절대 제외
-- 심리적 성향과 향의 화학적 특성 매칭
-- 실제 존재하는 유명 향수 브랜드와 제품명 사용
-- 계절감과 상황적 적합성
-- 개인의 라이프스타일과의 조화
+🎬 **IMPORTANT: 유명한 영화들(Django, Titanic, Avengers, Matrix, 기생충 등)에 대해서는 반드시 정확한 정보를 제공하세요!**
+- 감독명, 출시년도, 줄거리는 알고 있는 경우 절대 '미상'으로 표기하지 마세요
+- 확실하지 않은 극히 마이너한 영화만 '미상' 처리하세요
+
+1. 상징 키워드: 해당 영화를 대표하는 5-8개의 핵심 키워드 추출
+2. 장르 매칭도: 사용자 선호 장르와 선택한 영화의 일치도를 1-10점으로 평가
+   - 7점 이상: 매칭됨 (isMatched: true)
+   - 6점 이하: 매칭 안됨 (isMatched: false)
+   - 구체적인 매칭/불일치 이유 설명
+3. 영화적 특성: 시각적 스타일, 연출 기법, 촬영 기법 등 영화만의 특징
+4. 감정적 공명도: 이 영화가 관객에게 주는 감정적 임팩트와 여운
+5. 핵심 테마: 영화의 주요 메시지, 상징, 철학적 의미
+
+※ 선택한 영화와 선호 장르가 다를 수 있음을 인정하고 솔직하게 분석할 것
+
+
+[향료 데이터베이스]
+탑노트 (1-10번): ${JSON.stringify(fragranceData.top)}
+미들노트 (11-20번): ${JSON.stringify(fragranceData.middle)}
+베이스노트 (21-30번): ${JSON.stringify(fragranceData.base)}
+
+[향수 추천 규칙]
+1. 위 향료 데이터베이스에서만 선택하여 3개 조합 생성
+   - 탑노트에서 1개
+   - 미들노트에서 1개  
+   - 베이스노트에서 1개
+2. 사용자가 싫어하는 향 계열은 절대 제외
+3. 🎬🎵 **YouTube 링크 기반 감성 매칭 강화**:
+   - 영화 예고편 YouTube 링크가 있는 경우: 예고편의 시각적 톤, 색감, 분위기를 향료 선택에 반영
+   - 음악 YouTube 링크가 있는 경우: 음악의 음향적 특성, 리듬감, 감정적 에너지를 향료 조합에 연결
+   - 두 링크 모두 있는 경우: 영화-음악의 시너지를 고려한 더욱 정교한 향수 컨셉 설계
+4. 총 2g 기준으로 조향 비율 계산 (예: 0.6g : 0.8g : 0.6g)
+5. 영화/음악의 감성에 맞는 매우 감성적이고 시적인 향수 이름 생성
+
+향수 이름 예시:
+- "겨울왕국의 빙하 속 꽃" (겨울왕국 영화)
+- "어둠 속 붉은 장미의 속삭임" (뱀파이어 영화)
+- "태양이 춤추는 지중해의 아침" (맘마미아 영화)
+- "달빛에 젖은 비밀의 정원" (미드나잇 인 파리)
+
+[방사형 그래프 척도 계산 규칙 - 향수학 기반 전문 분석]
+선택한 3가지 향료(TOP, MIDDLE, BASE)의 향수학적 특성을 종합 분석하여 다음 10가지 전문 척도를 1-10 점수로 계산:
+
+**🌸 향수 구조 분석 척도 (Fragrance Structure Analysis)**
+
+1. **부드러움 (Softness)**: 전체적으로 부드럽고 포근한 정도
+   - 높음: 머스크, 바닐라, 파우더리노트, 화이트플로럴 계열
+   - 낮음: 스파이시, 레더, 매탈릭 계열
+
+2. **강렬함 (Intensity)**: 향의 강도와 지속력, 실라지 정도  
+   - 높음: 인센스, 과이악우드, 레더, 오리스, 동물성 머스크
+   - 낮음: 시트러스, 라이트 플로럴, 아쿠아틱 계열
+
+3. **신선함 (Freshness)**: 상쾌하고 깨끗한 워터리/그린 특성
+   - 높음: 시트러스, 민트, 바다소금, 오이, 그린리프 계열  
+   - 낮음: 헤비우디, 오리엔탈, 고농도 플로럴 계열
+
+4. **따뜻함 (Warmth)**: 포근하고 따스한 오리엔탈 특성
+   - 높음: 앰버, 바닐라, 벤조인, 계피, 통카빈 계열
+   - 낮음: 멘톨, 아이시노트, 쿨 시트러스 계열
+
+5. **달콤함 (Sweetness)**: 설탕, 꿀, 과일의 달달한 정도
+   - 높음: 바닐라, 캐러멜, 프루티, 고우르망 계열
+   - 낮음: 드라이우디, 그린, 미네랄 계열
+
+**🌿 향료 계열 분석 척도 (Fragrance Family Analysis)**
+
+6. **우디함 (Woodiness)**: 나무 향의 깊이와 복합성
+   - 높음: 샌달우드, 시더우드, 베티버, 패츨리 계열
+   - 낮음: 시트러스, 아쿠아틱, 라이트 플로럴 계열
+
+7. **플로럴함 (Florality)**: 꽃향의 풍부함과 여성성
+   - 높음: 로즈, 자스민, 튜베로즈, 피오니 계열
+   - 낮음: 우디, 스파이시, 미네랄 계열
+
+8. **스파이시함 (Spiciness)**: 향신료의 매콤하고 자극적인 정도
+   - 높음: 핑크페퍼, 계피, 정향, 카다멈, 넛맥 계열
+   - 낮음: 스위트, 파우더리, 소프트 플로럴 계열
+
+**🎨 조향 예술성 분석 척도 (Perfumery Artistry Analysis)**
+
+9. **깊이감 (Depth)**: 향의 층위와 복합성, 진화 과정
+   - 높음: 다층 구조, 시간에 따른 변화, 복합 조향
+   - 낮음: 단일 노트, 리니어한 전개
+
+10. **개성감 (Uniqueness)**: 독창성과 기억에 남는 특별함
+    - 높음: 희귀 향료, 혁신적 조합, 아방가르드 구성
+    - 낮음: 클래식 구성, 대중적 조합
+
+**계산 방법론:**
+- 각 향료의 개별 특성 점수 계산 (1-10)
+- TOP/MIDDLE/BASE 비율 가중치 적용 (0.3/0.4/0.3)
+- 향료 간 시너지 효과 보정 (±1점)
+- 최종 점수는 정수로 출력 (1-10)
 
 {
-  "personalityAnalysis": {
-    "corePersonality": "핵심 성격 특성 (50자 이내)",
-    "emotionalDepth": "감정적 깊이와 처리 방식 (60자 이내)", 
-    "socialTendency": "사회적 성향과 관계 패턴 (60자 이내)",
-    "aestheticPreference": "미적 취향과 감각적 선호 (60자 이내)",
-    "lifestylePattern": "라이프스타일 패턴과 가치관 (60자 이내)"
+  "analyzedMusic": {
+    "title": "분석에 사용된 정확한 노래 제목 (영화 사운드트랙이 아닌 실제 곡명) - 한국어로 작성",
+    "artist": "분석에 사용된 정확한 가수/아티스트명 (영화 감독이 아닌 실제 가수명) - 한국어로 작성",
+    "correctionNote": "교정이 있었다면 한국어로 설명, 없으면 null",
+    "symbolKeywords": ["음악을 상징하는 핵심 키워드들 5-8개 (한국어로 작성: 장르, 분위기, 감정, 특징 등)"],
+    "genre": "세부 장르 분류와 음악적 뿌리를 한국어로 설명 (예: '재즈 퓨전 요소가 가미된 네오소울 힙합')",
+    "characteristics": "곡의 독특한 특징과 사운드 정체성을 한국어로 설명 (80자 이내)",
+    "emotionalTone": "감정적 아크와 분위기 변화의 전문적 분석을 한국어로 작성 (100자 이내)",
+    "theme": "가사와 멜로디의 핵심 메시지, 숨겨진 의미를 한국어로 설명 (100자 이내)",
+    "musicalComposition": "편곡, 악기 구성, 리듬 패턴 등 음악적 구성 요소를 한국어로 설명 (120자 이내)",
+    "backgroundStory": "곡의 탄생 배경과 문화적 맥락을 한국어로 설명 (100자 이내)"
+  },
+  "analyzedMovie": {
+    "title": "사용자가 제공한 영화 제목 (제공되지 않았으면 null) - 한국어로 작성",
+    "director": "영화 감독명을 한국어로 기입 (유명한 영화라면 반드시 감독명 포함, 정말 모르는 경우만 '미상')",
+    "year": "영화 출시년도 기입 (유명한 영화라면 반드시 년도 포함, 정말 모르는 경우만 '미상')",
+    "genre": ["영화 장르를 한국어로 작성 (가능한 한 구체적이고 정확하게)"],
+    "description": "영화 줄거리를 한국어로 기입 (유명한 영화라면 반드시 줄거리 포함, 정말 모르는 경우만 '미상')"
   },
   "movieAnalysis": {
-    "psychologicalDriver": "영화 선택의 심리적 동기 (80자 이내)",
-    "emotionalNeeds": "영화를 통해 충족하려는 감정적 욕구 (80자 이내)",
-    "cognitiveStyle": "인지 스타일과 정보 처리 방식 (80자 이내)",
-    "escapismPattern": "현실 도피 패턴과 이상향 (80자 이내)"
-  },
-  "musicAnalysis": {
-    "emotionalResonance": "음악과의 감정적 공명 양상 (80자 이내)",
-    "memoryAssociation": "기억과 음악의 연관성 패턴 (80자 이내)",
-    "energyAlignment": "음악 에너지와 개인 에너지의 정렬 (80자 이내)",
-    "identityExpression": "음악을 통한 정체성 표현 방식 (80자 이내)"
+    "symbolKeywords": ["영화를 상징하는 핵심 키워드들 5-8개 (반드시 한국어로 작성)"],
+    "genreMatching": {
+      "score": "1-10점 매칭 점수",
+      "isMatched": "7점 이상이면 true, 6점 이하면 false",
+      "explanation": "매칭/불일치 이유를 한국어로 구체적 설명 (100자 이내)"
+    },
+    "cinematicFeatures": "영화의 시각적/연출적 특징을 한국어로 분석 (120자 이내)",
+    "emotionalResonance": "관객에게 주는 감정적 임팩트와 여운을 한국어로 설명 (100자 이내)",
+    "coreThemes": "영화의 핵심 메시지와 상징적 의미를 한국어로 설명 (100자 이내)"
   },
   "fragranceRecommendations": [
     {
-      "name": "실제 향수명",
-      "brand": "실제 브랜드명",
-      "fragranceFamily": "향 계열 (플로럴, 우디, 오리엔탈 등)",
-      "topNotes": ["탑노트1", "탑노트2", "탑노트3"],
-      "middleNotes": ["미들노트1", "미들노트2", "미들노트3"],
-      "baseNotes": ["베이스노트1", "베이스노트2", "베이스노트3"],
-      "personality": "이 향수가 표현하는 성격 (40자 이내)",
-      "situation": "추천 상황 (30자 이내)",
-      "season": "추천 계절 (20자 이내)",
-      "reasonForRecommendation": "추천 이유와 심리적 매칭 (100자 이내)",
-      "psychologicalMatch": "심리적 일치도 설명 (80자 이내)"
+      "name": "실제 향수명 (한국어로 작성)",
+      "brand": "실제 브랜드명 (한국어로 작성)",
+      "fragranceFamily": "향 계열을 한국어로 작성 (플로럴, 우디, 오리엔탈 등)",
+      "topNotes": ["탑노트1을 한국어로", "탑노트2를 한국어로", "탑노트3을 한국어로"],
+      "middleNotes": ["미들노트1을 한국어로", "미들노트2를 한국어로", "미들노트3을 한국어로"],
+      "baseNotes": ["베이스노트1을 한국어로", "베이스노트2를 한국어로", "베이스노트3을 한국어로"],
+      "personality": "이 향수가 표현하는 느낌을 한국어로 설명 (40자 이내)",
+      "situation": "추천 상황을 한국어로 설명 (30자 이내)",
+      "season": "추천 계절을 한국어로 설명 (20자 이내)",
+      "reasonForRecommendation": "추천 이유와 취향 매칭을 한국어로 설명 (100자 이내)",
+      "psychologicalMatch": "취향 일치도를 한국어로 설명 (80자 이내)",
+      "customPerfumeName": "영화/음악 감성에 맞는 매우 시적이고 감성적인 한국어 향수 이름",
+      "fragranceRecipe": {
+        "topNote": {
+          "id": "AC'SCENT XX 형식의 ID",
+          "name": "향료 이름",
+          "ratio": "g 단위 숫자 (소수점 1자리)"
+        },
+        "middleNote": {
+          "id": "AC'SCENT XX 형식의 ID",
+          "name": "향료 이름", 
+          "ratio": "g 단위 숫자 (소수점 1자리)"
+        },
+        "baseNote": {
+          "id": "AC'SCENT XX 형식의 ID",
+          "name": "향료 이름",
+          "ratio": "g 단위 숫자 (소수점 1자리)"
+        }
+      },
+      "radarChart": {
+        "부드러움": "1-10 점수 (정수) - 부드럽고 포근한 정도",
+        "강렬함": "1-10 점수 (정수) - 향의 강도와 지속력",
+        "신선함": "1-10 점수 (정수) - 상쾌하고 깨끗한 정도",
+        "따뜻함": "1-10 점수 (정수) - 포근하고 따스한 정도",
+        "달콤함": "1-10 점수 (정수) - 달달한 스위트 정도",
+        "우디함": "1-10 점수 (정수) - 나무 향의 깊이",
+        "플로럴함": "1-10 점수 (정수) - 꽃향의 풍부함",
+        "스파이시함": "1-10 점수 (정수) - 향신료의 매콤함",
+        "깊이감": "1-10 점수 (정수) - 향의 층위와 복합성",
+        "개성감": "1-10 점수 (정수) - 독창성과 특별함"
+      }
     }
   ],
   "lifestyleAdvice": {
-    "dailyRoutine": "일상 루틴에 대한 조언 (100자 이내)",
-    "socialInteraction": "사회적 상호작용 방식 조언 (100자 이내)",
-    "personalGrowth": "개인 성장을 위한 제안 (100자 이내)",
-    "fragranceUsage": "향수 사용법과 타이밍 조언 (100자 이내)"
+    "dailyRoutine": "일상 루틴에 대한 조언을 한국어로 작성 (100자 이내)",
+    "socialInteraction": "사회적 상호작용 방식 조언을 한국어로 작성 (100자 이내)",
+    "personalGrowth": "개인 성장을 위한 제안을 한국어로 작성 (100자 이내)",
+    "fragranceUsage": "향수 사용법과 타이밍 조언을 한국어로 작성 (100자 이내)"
   }
 }
 `;
@@ -155,6 +432,11 @@ export async function POST(request: NextRequest) {
     const response = await result.response
     const analysisText = response.text()
 
+    // 제미나이 응답 디버깅
+    console.log('=== 제미나이 응답 디버깅 ===')
+    console.log('Raw response:', analysisText.substring(0, 500) + '...')
+    console.log('==========================')
+
     // JSON 파싱 시도
     let analysisResult: AnalysisResult
     try {
@@ -165,6 +447,18 @@ export async function POST(request: NextRequest) {
         .trim()
       
       analysisResult = JSON.parse(cleanedResponse)
+      
+      // 분석 결과의 음악 정보 디버깅
+      console.log('=== 분석된 음악 정보 ===')
+      console.log('제미나이 분석 결과:', analysisResult.analyzedMusic)
+      console.log('========================')
+      
+      // 분석 결과의 영화 정보 디버깅
+      if (analysisResult.analyzedMovie) {
+        console.log('=== 분석된 영화 정보 ===')
+        console.log('제미나이 분석 결과:', analysisResult.analyzedMovie)
+        console.log('========================')
+      }
     } catch (parseError) {
       console.error('JSON 파싱 오류:', parseError)
       console.error('응답 텍스트:', analysisText)

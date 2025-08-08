@@ -1,8 +1,8 @@
 # Gemini AI API 설정
 GEMINI_API_KEY=AIzaSyAlH_l4pN_2Hp640_awBIfLbgmaGOpmbLE
 
-# YouTube API 설정 (향후 사용)
-YOUTUBE_API_KEY=your_youtube_api_key_here
+# YouTube API 설정
+YOUTUBE_API_KEY=AIzaSyAuChwfN7zd0Adf-aDZ1G1ZgDH6vkeQIBE
 
 # Next.js 설정
 NEXT_PUBLIC_APP_NAME=JIMFF

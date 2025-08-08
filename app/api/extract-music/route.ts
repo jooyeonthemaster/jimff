@@ -67,7 +67,7 @@ function parseArtistAndTitle(title: string): { artist: string; title: string } {
 
 export async function POST(req: NextRequest) {
   try {
-    const { youtubeUrl } = await req.json();
+    const { youtubeUrl, type = 'music' } = await req.json();
 
     if (!youtubeUrl) {
       return NextResponse.json(
@@ -118,14 +118,33 @@ export async function POST(req: NextRequest) {
     }
 
     const videoInfo = data.items[0].snippet;
-    const { artist, title } = parseArtistAndTitle(videoInfo.title);
-
-    const result: YouTubeVideoData = {
-      title: title || videoInfo.title,
-      artist: artist || videoInfo.channelTitle,
-      description: videoInfo.description || '',
-      publishedAt: videoInfo.publishedAt
-    };
+    
+    let result: YouTubeVideoData;
+    
+    if (type === 'movie') {
+      // 영화 예고편의 경우
+      const cleanTitle = videoInfo.title
+        .replace(/trailer|예고편|official|티저|teaser|official trailer|main trailer/gi, '')
+        .replace(/\[.*?\]|\(.*?\)/g, '') // 대괄호, 소괄호 내용 제거
+        .trim();
+      
+      result = {
+        title: cleanTitle || videoInfo.title,
+        artist: videoInfo.channelTitle, // 영화의 경우 배급사/제작사
+        description: videoInfo.description || '',
+        publishedAt: videoInfo.publishedAt
+      };
+    } else {
+      // 음악의 경우 (기존 로직)
+      const { artist, title } = parseArtistAndTitle(videoInfo.title);
+      
+      result = {
+        title: title || videoInfo.title,
+        artist: artist || videoInfo.channelTitle,
+        description: videoInfo.description || '',
+        publishedAt: videoInfo.publishedAt
+      };
+    }
 
     return NextResponse.json({
       success: true,

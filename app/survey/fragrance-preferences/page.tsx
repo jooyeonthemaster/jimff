@@ -226,15 +226,9 @@ export default function FragrancePreferencesPage() {
         <NavigationButtons
           prevLink="/survey/music-info"
           onNext={handleNext}
-          nextDisabled={likedFragrances.length === 0 && dislikedFragrances.length === 0}
+          nextDisabled={false}
           nextText="다음 단계"
         />
-        
-        {(likedFragrances.length === 0 && dislikedFragrances.length === 0) && (
-          <p className="text-white/60 text-sm text-center">
-            최소 하나의 향 선호도를 선택해주세요
-          </p>
-        )}
       </div>
     </SurveyLayout>
   )
