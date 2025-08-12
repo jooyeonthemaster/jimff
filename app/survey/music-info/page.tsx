@@ -360,7 +360,7 @@ export default function MusicInfoPage() {
           <div className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-white/90 mb-3">
-                음악 제목
+                영화 ost 제목
               </label>
               <input
                 type="text"
@@ -377,7 +377,7 @@ export default function MusicInfoPage() {
 
             <div>
               <label className="block text-sm font-medium text-white/90 mb-3">
-                음악 YouTube 링크 (선택사항)
+                ost YouTube 링크 (선택사항)
               </label>
               <div className="flex gap-3">
                 <input

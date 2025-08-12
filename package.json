@@ -12,6 +12,7 @@
     "@google/generative-ai": "^0.24.1",
     "@types/three": "^0.178.0",
     "axios": "^1.10.0",
+    "exa-js": "^1.8.27",
     "googleapis": "^150.0.1",
     "next": "15.3.5",
     "react": "^19.0.0",

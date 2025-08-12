@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { 
+  searchMovieData, 
+  searchMusicData, 
+  searchMusicFromYouTube, 
+  searchFragranceKnowledge,
+  formatSearchDataForAI 
+} from '../../services/searchService'
+import { 
+  getAllRelevantLibraries,
+  formatLibraryInfoForAI 
+} from '../../services/contextService'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
@@ -122,6 +133,77 @@ export async function POST(request: NextRequest) {
     })
     console.log('========================')
 
+    // 🔍 웹 검색을 통한 실제 데이터 수집
+    console.log('🌐 웹 검색 데이터 수집 시작...')
+    
+    let movieSearchData = null
+    let musicSearchData = null
+    let fragranceKnowledge = null
+    let libraryInfo: { music: any[], movie: any[], fragrance: any[] } | null = null
+
+    // 병렬로 모든 검색 수행
+    const searchPromises = []
+
+    // 1. 영화 데이터 검색
+    if (data.movieTitle) {
+      searchPromises.push(
+        searchMovieData(data.movieTitle).then(result => {
+          movieSearchData = result
+          console.log('✅ 영화 검색 완료:', data.movieTitle)
+        }).catch(error => {
+          console.error('❌ 영화 검색 실패:', error)
+        })
+      )
+    }
+
+    // 2. 음악 데이터 검색
+    if (data.musicYoutubeUrl) {
+      // YouTube URL이 있는 경우
+      searchPromises.push(
+        searchMusicFromYouTube(data.musicYoutubeUrl).then(result => {
+          musicSearchData = result
+          console.log('✅ YouTube 음악 검색 완료:', data.musicYoutubeUrl)
+        }).catch(error => {
+          console.error('❌ YouTube 음악 검색 실패:', error)
+        })
+      )
+    } else if (data.musicTitle) {
+      // 직접 입력된 음악 정보
+      const artist = data.extractedMusicArtist || data.musicArtist || ''
+      searchPromises.push(
+        searchMusicData(data.musicTitle, artist).then(result => {
+          musicSearchData = result
+          console.log('✅ 음악 검색 완료:', data.musicTitle)
+        }).catch(error => {
+          console.error('❌ 음악 검색 실패:', error)
+        })
+      )
+    }
+
+    // 3. 향수 전문 지식 검색
+    searchPromises.push(
+      searchFragranceKnowledge().then(result => {
+        fragranceKnowledge = result
+        console.log('✅ 향수 지식 검색 완료')
+      }).catch(error => {
+        console.error('❌ 향수 지식 검색 실패:', error)
+      })
+    )
+
+    // 4. 관련 라이브러리 정보 수집
+    searchPromises.push(
+      getAllRelevantLibraries().then(result => {
+        libraryInfo = result
+        console.log('✅ 라이브러리 정보 수집 완료')
+      }).catch(error => {
+        console.error('❌ 라이브러리 정보 수집 실패:', error)
+      })
+    )
+
+    // 모든 검색 완료 대기 (최대 15초)
+    await Promise.allSettled(searchPromises)
+    console.log('🎯 모든 웹 검색 완료!')
+
     // 향료 데이터 로드
     const fragranceData = {
       top: [
@@ -162,10 +244,33 @@ export async function POST(request: NextRequest) {
       ]
     }
 
+    // 🧠 수집된 데이터를 AI 분석용 컨텍스트로 변환
+    let searchContext = ''
+    let libraryContext = ''
+
+    if (movieSearchData || musicSearchData || fragranceKnowledge) {
+      searchContext = formatSearchDataForAI(
+        movieSearchData || undefined,
+        musicSearchData || undefined, 
+        fragranceKnowledge || undefined
+      )
+      console.log('📝 검색 컨텍스트 생성 완료 (', searchContext.length, '자)')
+    }
+
+    if (libraryInfo) {
+      const libInfo = libraryInfo as { music: any[], movie: any[], fragrance: any[] }
+      libraryContext = formatLibraryInfoForAI(libInfo.music, libInfo.movie, libInfo.fragrance)
+      console.log('📚 라이브러리 컨텍스트 생성 완료 (', libraryContext.length, '자)')
+    }
+
     const prompt = `
 당신은 세계적인 향수 전문가입니다. 20년 이상의 경험을 바탕으로 다음 사용자의 영화/음악 취향을 분석하여 맞춤 향수를 추천해주세요.
 
 **🇰🇷 CRITICAL: 모든 응답은 반드시 한국어로 작성하세요. 절대 영어나 다른 언어를 사용하지 마세요.**
+
+${searchContext ? `${searchContext}\n` : ''}
+
+${libraryContext ? `${libraryContext}\n` : ''}
 
 [사용자 데이터]
 선호 영화 장르: ${data.movieGenres?.join(', ') || '정보 없음'}
@@ -424,9 +529,11 @@ export async function POST(request: NextRequest) {
       model: 'gemini-1.5-flash',
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 4000,
+        maxOutputTokens: 6000, // 추가 컨텍스트로 인해 토큰 수 증가
       }
     })
+
+    console.log('🤖 Gemini AI 분석 시작... (프롬프트 길이:', prompt.length, '자)')
 
     const result = await model.generateContent(prompt)
     const response = await result.response
@@ -435,6 +542,13 @@ export async function POST(request: NextRequest) {
     // 제미나이 응답 디버깅
     console.log('=== 제미나이 응답 디버깅 ===')
     console.log('Raw response:', analysisText.substring(0, 500) + '...')
+    console.log('Response length:', analysisText.length)
+    console.log('Search data used:', {
+      movieData: !!movieSearchData,
+      musicData: !!musicSearchData,
+      fragranceKnowledge: !!fragranceKnowledge,
+      libraryInfo: !!libraryInfo
+    })
     console.log('==========================')
 
     // JSON 파싱 시도
@@ -479,11 +593,23 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Gemini API 오류:', error)
+    console.error('=== Gemini API 상세 오류 ===')
+    console.error('Error type:', typeof error)
+    console.error('Error message:', error instanceof Error ? error.message : String(error))
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+    console.error('Full error object:', error)
+    console.error('API Key exists:', !!process.env.GEMINI_API_KEY)
+    console.error('API Key length:', process.env.GEMINI_API_KEY?.length || 0)
+    console.error('========================')
+    
     return NextResponse.json(
       { 
         success: false, 
-        error: '취향 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' 
+        error: '취향 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+        debug: process.env.NODE_ENV === 'development' ? {
+          message: error instanceof Error ? error.message : String(error),
+          hasApiKey: !!process.env.GEMINI_API_KEY
+        } : undefined
       },
       { status: 500 }
     )
