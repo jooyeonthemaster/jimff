@@ -191,8 +191,9 @@ function GeometricNetworkAnimation() {
 
 export default function MusicInfoPage() {
   const [movieTitle, setMovieTitle] = useState('')
-  const [movieTrailerUrl, setMovieTrailerUrl] = useState('')
+  const [movieDirector, setMovieDirector] = useState('')
   const [musicTitle, setMusicTitle] = useState('')
+  const [musicArtist, setMusicArtist] = useState('')
   const [musicYoutubeUrl, setMusicYoutubeUrl] = useState('')
   const [isExtracting, setIsExtracting] = useState(false)
   const [extractedInfo, setExtractedInfo] = useState<{title: string, artist: string} | null>(null)
@@ -202,8 +203,9 @@ export default function MusicInfoPage() {
   useEffect(() => {
     const surveyData = JSON.parse(localStorage.getItem('surveyData') || '{}')
     if (surveyData.movieTitle) setMovieTitle(surveyData.movieTitle)
-    if (surveyData.movieTrailerUrl) setMovieTrailerUrl(surveyData.movieTrailerUrl)
+    if (surveyData.movieDirector) setMovieDirector(surveyData.movieDirector)
     if (surveyData.musicTitle) setMusicTitle(surveyData.musicTitle)
+    if (surveyData.musicArtist) setMusicArtist(surveyData.musicArtist)
     if (surveyData.musicYoutubeUrl) setMusicYoutubeUrl(surveyData.musicYoutubeUrl)
   }, [])
 
@@ -223,6 +225,7 @@ export default function MusicInfoPage() {
         if (result.success && result.data) {
           setExtractedInfo(result.data)
           setMusicTitle(result.data.title)
+          setMusicArtist(result.data.artist)
         }
       }
     } catch (error) {
@@ -232,32 +235,7 @@ export default function MusicInfoPage() {
     }
   }
 
-  const extractMovieTrailer = async () => {
-    if (!movieTrailerUrl) return
 
-    setIsExtracting(true)
-    try {
-      const response = await fetch('/api/extract-music', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ youtubeUrl: movieTrailerUrl, type: 'movie' })
-      })
-
-      if (response.ok) {
-        const result = await response.json()
-        if (result.success && result.data) {
-          // 영화 제목이 비어있으면 YouTube에서 추출한 제목 사용
-          if (!movieTitle && result.data.title) {
-            setMovieTitle(result.data.title.replace(/trailer|예고편|official|티저/gi, '').trim())
-          }
-        }
-      }
-    } catch (error) {
-      console.error('영화 예고편 정보 추출 실패:', error)
-    } finally {
-      setIsExtracting(false)
-    }
-  }
 
   const handleNext = () => {
     // 데이터 저장
@@ -265,8 +243,9 @@ export default function MusicInfoPage() {
     
     // 영화 및 음악 정보 저장
     surveyData.movieTitle = movieTitle
-    surveyData.movieTrailerUrl = movieTrailerUrl
+    surveyData.movieDirector = movieDirector
     surveyData.musicTitle = musicTitle
+    surveyData.musicArtist = musicArtist
     surveyData.musicYoutubeUrl = musicYoutubeUrl
     localStorage.setItem('surveyData', JSON.stringify(surveyData))
     
@@ -278,7 +257,7 @@ export default function MusicInfoPage() {
     window.open('https://www.youtube.com/playlist?list=PLYour_JIMFF_Playlist_ID', '_blank')
   }
 
-  const canProceed = musicTitle.trim() !== '' || musicYoutubeUrl.trim() !== ''
+  const canProceed = movieTitle.trim() !== '' && movieDirector.trim() !== '' && musicTitle.trim() !== '' && musicArtist.trim() !== '' && musicYoutubeUrl.trim() !== ''
 
   return (
     <SurveyLayout showMusicEffect={false}>
@@ -293,17 +272,17 @@ export default function MusicInfoPage() {
         <SurveyCard>
           <div className="text-center space-y-4">
             <h1 className="text-2xl font-bold text-white">
-              좋아하는 영화 음악은?
+              영화와 OST 정보를 입력하세요
             </h1>
             <p className="text-white/80">
-              영화 제목과 음악 정보를 입력해주세요
+              모든 항목을 입력해주세요
             </p>
           </div>
 
           {/* 영화 제목 입력 섹션 */}
           <div className="space-y-4">
             <label className="block text-sm font-medium text-white/90">
-              영화 제목
+              영화 제목 <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
@@ -315,81 +294,83 @@ export default function MusicInfoPage() {
                 transform: 'perspective(300px) rotateX(2deg)',
                 boxShadow: '0 5px 15px rgba(0, 0, 0, 0.2)'
               }}
+              required
             />
           </div>
 
-          {/* 영화 예고편 링크 섹션 */}
+          {/* 감독 입력 섹션 */}
           <div className="space-y-4">
             <label className="block text-sm font-medium text-white/90">
-              영화 예고편 YouTube 링크 (선택사항)
+              감독 <span className="text-red-400">*</span>
             </label>
-            <div className="flex gap-3">
-              <input
-                type="url"
-                value={movieTrailerUrl}
-                onChange={(e) => setMovieTrailerUrl(e.target.value)}
-                placeholder="영화 예고편 YouTube 링크를 입력하세요..."
-                className="flex-1 px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/50 text-sm focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-300"
-                style={{
-                  transform: 'perspective(300px) rotateX(2deg)',
-                  boxShadow: '0 5px 15px rgba(0, 0, 0, 0.2)'
-                }}
-              />
-              <button
-                onClick={extractMovieTrailer}
-                disabled={!movieTrailerUrl || isExtracting}
-                className="px-4 py-3 bg-gradient-to-r from-purple-500 to-blue-600 text-white rounded-xl text-xs font-medium hover:from-purple-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
-                style={{
-                  transform: 'perspective(300px) rotateX(2deg)',
-                  boxShadow: '0 8px 20px rgba(139, 92, 246, 0.4)'
-                }}
-              >
-                {isExtracting ? '추출중...' : '추출'}
-              </button>
-            </div>
+            <input
+              type="text"
+              value={movieDirector}
+              onChange={(e) => setMovieDirector(e.target.value)}
+              placeholder="감독명을 입력하세요"
+              className="w-full px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/50 text-sm focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-300"
+              style={{
+                transform: 'perspective(300px) rotateX(2deg)',
+                boxShadow: '0 5px 15px rgba(0, 0, 0, 0.2)'
+              }}
+              required
+            />
           </div>
 
-          {/* 구분선 */}
-          <div className="flex items-center">
-            <div className="flex-1 border-t border-white/30"></div>
-            <span className="px-4 text-sm text-white/60">또는 직접 입력</span>
-            <div className="flex-1 border-t border-white/30"></div>
-          </div>
-
-          {/* 직접 입력 섹션 */}
+          {/* OST 정보 입력 섹션 */}
           <div className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-white/90 mb-3">
-                영화 ost 제목
+                OST 제목 <span className="text-red-400">*</span>
               </label>
               <input
                 type="text"
                 value={musicTitle}
                 onChange={(e) => setMusicTitle(e.target.value)}
-                placeholder="곡제목을 입력하세요"
+                placeholder="OST 제목을 입력하세요"
                 className="w-full px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/50 text-sm focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-300"
                 style={{
                   transform: 'perspective(300px) rotateX(2deg)',
                   boxShadow: '0 5px 15px rgba(0, 0, 0, 0.2)'
                 }}
+                required
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-white/90 mb-3">
-                ost YouTube 링크 (선택사항)
+                아티스트/가수 <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="text"
+                value={musicArtist}
+                onChange={(e) => setMusicArtist(e.target.value)}
+                placeholder="아티스트/가수명을 입력하세요"
+                className="w-full px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/50 text-sm focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-300"
+                style={{
+                  transform: 'perspective(300px) rotateX(2deg)',
+                  boxShadow: '0 5px 15px rgba(0, 0, 0, 0.2)'
+                }}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-white/90 mb-3">
+                OST YouTube 링크 <span className="text-red-400">*</span>
               </label>
               <div className="flex gap-3">
                 <input
                   type="url"
                   value={musicYoutubeUrl}
                   onChange={(e) => setMusicYoutubeUrl(e.target.value)}
-                  placeholder="음악 YouTube 링크를 입력하세요..."
+                  placeholder="OST YouTube 링크를 입력하세요..."
                   className="flex-1 px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/50 text-sm focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-300"
                   style={{
                     transform: 'perspective(300px) rotateX(2deg)',
                     boxShadow: '0 5px 15px rgba(0, 0, 0, 0.2)'
                   }}
+                  required
                 />
                 <button
                   onClick={extractMusicFromYoutube}
@@ -443,7 +424,7 @@ export default function MusicInfoPage() {
         
         {!canProceed && (
           <p className="text-white/60 text-sm text-center">
-            곡제목 또는 아티스트 중 하나는 입력해주세요
+            모든 항목을 입력해주세요 (영화제목, 감독, OST제목, 아티스트, YouTube링크)
           </p>
         )}
       </div>

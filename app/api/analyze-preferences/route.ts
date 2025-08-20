@@ -5,6 +5,8 @@ import {
   searchMusicData, 
   searchMusicFromYouTube, 
   searchFragranceKnowledge,
+  searchSimilarMovies,
+  searchSimilarMusic,
   formatSearchDataForAI 
 } from '../../services/searchService'
 import { 
@@ -17,11 +19,12 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 interface PreferenceData {
   movieGenres: string[]
   movieTitle?: string
+  movieDirector?: string
   movieTrailerUrl?: string
   musicTitle: string
+  musicArtist?: string
   musicYoutubeUrl?: string
   youtubeLink?: string // 하위 호환성을 위해 유지
-  musicArtist?: string // 하위 호환성을 위해 유지
   extractedMusicTitle?: string
   extractedMusicArtist?: string
   likedFragrances: string[]
@@ -109,6 +112,21 @@ interface AnalysisResult {
   }
 
   fragranceRecommendations: FragranceRecommendation[]
+  movieRecommendations: {
+    title: string
+    director: string
+    year: string
+    genre: string
+    reason: string
+    poster: string
+  }[]
+  musicRecommendations: {
+    title: string
+    artist: string
+    album: string
+    reason: string
+    emoji: string
+  }[]
   lifestyleAdvice: {
     dailyRoutine: string
     socialInteraction: string
@@ -139,6 +157,8 @@ export async function POST(request: NextRequest) {
     let movieSearchData = null
     let musicSearchData = null
     let fragranceKnowledge = null
+    let similarMoviesData: any[] = []
+    let similarMusicData: any[] = []
     let libraryInfo: { music: any[], movie: any[], fragrance: any[] } | null = null
 
     // 병렬로 모든 검색 수행
@@ -190,7 +210,32 @@ export async function POST(request: NextRequest) {
       })
     )
 
-    // 4. 관련 라이브러리 정보 수집
+    // 4. 비슷한 영화 추천 검색
+    if (data.movieTitle) {
+      searchPromises.push(
+        searchSimilarMovies(data.movieTitle, data.movieGenres).then(result => {
+          similarMoviesData = result
+          console.log('✅ 비슷한 영화 검색 완료')
+        }).catch(error => {
+          console.error('❌ 비슷한 영화 검색 실패:', error)
+        })
+      )
+    }
+
+    // 5. 비슷한 음악 추천 검색
+    if (data.musicTitle) {
+      const artist = data.extractedMusicArtist || data.musicArtist || ''
+      searchPromises.push(
+        searchSimilarMusic(data.musicTitle, artist).then(result => {
+          similarMusicData = result
+          console.log('✅ 비슷한 음악 검색 완료')
+        }).catch(error => {
+          console.error('❌ 비슷한 음악 검색 실패:', error)
+        })
+      )
+    }
+
+    // 6. 관련 라이브러리 정보 수집
     searchPromises.push(
       getAllRelevantLibraries().then(result => {
         libraryInfo = result
@@ -246,6 +291,7 @@ export async function POST(request: NextRequest) {
 
     // 🧠 수집된 데이터를 AI 분석용 컨텍스트로 변환
     let searchContext = ''
+    let recommendationContext = ''
     let libraryContext = ''
 
     if (movieSearchData || musicSearchData || fragranceKnowledge) {
@@ -255,6 +301,28 @@ export async function POST(request: NextRequest) {
         fragranceKnowledge || undefined
       )
       console.log('📝 검색 컨텍스트 생성 완료 (', searchContext.length, '자)')
+    }
+
+    // 추천 컨텍스트 생성
+    if (similarMoviesData || similarMusicData) {
+      recommendationContext = `## 추천 참고 데이터\n\n`
+      
+      if (similarMoviesData && similarMoviesData.length > 0) {
+        recommendationContext += `### 🎬 비슷한 영화 참고 자료\n\n`
+        similarMoviesData.forEach((movie, idx) => {
+          recommendationContext += `**참고 ${idx + 1}**: ${movie.title}\n${movie.text.slice(0, 500)}...\n\n`
+        })
+      }
+
+      if (similarMusicData && similarMusicData.length > 0) {
+        recommendationContext += `### 🎵 비슷한 음악 참고 자료\n\n`
+        similarMusicData.forEach((music, idx) => {
+          recommendationContext += `**참고 ${idx + 1}**: ${music.title}\n${music.text.slice(0, 500)}...\n\n`
+        })
+      }
+
+      recommendationContext += `위의 실제 웹 데이터를 참고하여 정확하고 실존하는 영화/음악만 추천해주세요.\n\n`
+      console.log('📝 추천 컨텍스트 생성 완료 (', recommendationContext.length, '자)')
     }
 
     if (libraryInfo) {
@@ -269,6 +337,8 @@ export async function POST(request: NextRequest) {
 **🇰🇷 CRITICAL: 모든 응답은 반드시 한국어로 작성하세요. 절대 영어나 다른 언어를 사용하지 마세요.**
 
 ${searchContext ? `${searchContext}\n` : ''}
+
+${recommendationContext ? `${recommendationContext}\n` : ''}
 
 ${libraryContext ? `${libraryContext}\n` : ''}
 
@@ -360,6 +430,31 @@ ${libraryContext ? `${libraryContext}\n` : ''}
 
 ※ 선택한 영화와 선호 장르가 다를 수 있음을 인정하고 솔직하게 분석할 것
 
+[비슷한 영화 추천 규칙 - 정확성 최우선]
+**🚨 CRITICAL: 위의 추천 참고 데이터를 반드시 활용하여 실존하는 영화만 추천하세요!**
+
+사용자가 입력한 영화와 선호 장르를 바탕으로 3편의 비슷한 영화를 추천하세요:
+1. **실존 확인**: 위의 웹 검색 데이터에서 언급된 실제 영화만 추천
+2. **정보 정확성**: 영화 제목, 감독명, 출시년도를 정확하게 기입
+3. **장르적 유사성**: 사용자 선호 장르와 매칭
+4. **감정적 톤 매칭**: 입력 영화와 비슷한 분위기
+5. **추천 이유**: 구체적이고 명확한 이유 (80자 이내)
+6. **이모지 선택**: 영화를 상징하는 적절한 이모지
+
+⚠️ **절대 가상의 영화나 부정확한 정보를 만들어내지 마세요!**
+
+[비슷한 음악 추천 규칙 - 정확성 최우선]  
+**🚨 CRITICAL: 위의 추천 참고 데이터를 반드시 활용하여 실존하는 음악만 추천하세요!**
+
+사용자가 입력한 음악과 분석된 특성을 바탕으로 3곡의 비슷한 음악을 추천하세요:
+1. **실존 확인**: 위의 웹 검색 데이터에서 언급된 실제 곡만 추천
+2. **정보 정확성**: 곡 제목, 아티스트명, 앨범명을 정확하게 기입
+3. **장르적 유사성**: 음악적 스타일과 장르 매칭
+4. **감정적 톤 매칭**: 입력 음악과 비슷한 에너지
+5. **추천 이유**: 구체적이고 명확한 이유 (80자 이내)
+6. **이모지 선택**: 음악을 상징하는 적절한 이모지
+
+⚠️ **절대 가상의 곡이나 부정확한 정보를 만들어내지 마세요!**
 
 [향료 데이터베이스]
 탑노트 (1-10번): ${JSON.stringify(fragranceData.top)}
@@ -516,11 +611,60 @@ ${libraryContext ? `${libraryContext}\n` : ''}
       }
     }
   ],
+  "movieRecommendations": [
+    {
+      "title": "실존하는 추천 영화 제목 1 (한국어로 작성)",
+      "director": "정확한 감독명 (한국어로 작성)",
+      "year": "정확한 출시년도",
+      "genre": "장르 (한국어로 작성)",
+      "reason": "추천 이유를 한국어로 설명 (80자 이내)",
+      "poster": "영화를 상징하는 이모지 1개"
+    },
+    {
+      "title": "실존하는 추천 영화 제목 2 (한국어로 작성)",
+      "director": "정확한 감독명 (한국어로 작성)",
+      "year": "정확한 출시년도",
+      "genre": "장르 (한국어로 작성)",
+      "reason": "추천 이유를 한국어로 설명 (80자 이내)",
+      "poster": "영화를 상징하는 이모지 1개"
+    },
+    {
+      "title": "실존하는 추천 영화 제목 3 (한국어로 작성)",
+      "director": "정확한 감독명 (한국어로 작성)",
+      "year": "정확한 출시년도",
+      "genre": "장르 (한국어로 작성)",
+      "reason": "추천 이유를 한국어로 설명 (80자 이내)",
+      "poster": "영화를 상징하는 이모지 1개"
+    }
+  ],
+  "musicRecommendations": [
+    {
+      "title": "실존하는 추천 곡 제목 1 (한국어로 작성)",
+      "artist": "정확한 아티스트명 (한국어로 작성)",
+      "album": "정확한 앨범명 (한국어로 작성)",
+      "reason": "추천 이유를 한국어로 설명 (80자 이내)",
+      "emoji": "음악을 상징하는 이모지 1개"
+    },
+    {
+      "title": "실존하는 추천 곡 제목 2 (한국어로 작성)",
+      "artist": "정확한 아티스트명 (한국어로 작성)",
+      "album": "정확한 앨범명 (한국어로 작성)",
+      "reason": "추천 이유를 한국어로 설명 (80자 이내)",
+      "emoji": "음악을 상징하는 이모지 1개"
+    },
+    {
+      "title": "실존하는 추천 곡 제목 3 (한국어로 작성)",
+      "artist": "정확한 아티스트명 (한국어로 작성)",
+      "album": "정확한 앨범명 (한국어로 작성)",
+      "reason": "추천 이유를 한국어로 설명 (80자 이내)",
+      "emoji": "음악을 상징하는 이모지 1개"
+    }
+  ],
   "lifestyleAdvice": {
-    "dailyRoutine": "일상 루틴에 대한 조언을 한국어로 작성 (100자 이내)",
-    "socialInteraction": "사회적 상호작용 방식 조언을 한국어로 작성 (100자 이내)",
-    "personalGrowth": "개인 성장을 위한 제안을 한국어로 작성 (100자 이내)",
-    "fragranceUsage": "향수 사용법과 타이밍 조언을 한국어로 작성 (100자 이내)"
+    "dailyRoutine": "일상 루틴 조언 (50자 이내)",
+    "socialInteraction": "사회적 관계 조언 (50자 이내)",
+    "personalGrowth": "개인 성장 조언 (50자 이내)",
+    "fragranceUsage": "향수 사용법 조언 (50자 이내)"
   }
 }
 `;

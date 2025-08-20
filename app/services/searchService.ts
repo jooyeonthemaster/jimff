@@ -170,10 +170,10 @@ export async function searchMusicFromYouTube(youtubeUrl: string): Promise<MusicS
     })
 
     if (youtubeResult.results.length > 0) {
-      const title = youtubeResult.results[0].title
+      const title = youtubeResult.results[0].title || ''
       // 제목에서 아티스트와 곡명 파싱 시도
-              const parsedTitle = parseArtistAndTitle(title)
-        return await searchMusicData(parsedTitle.title, parsedTitle.artist || undefined)
+      const parsedTitle = parseArtistAndTitle(title)
+      return await searchMusicData(parsedTitle.title, parsedTitle.artist || undefined)
     }
 
     return {
@@ -221,7 +221,7 @@ export async function searchFragranceKnowledge(): Promise<SearchResult[]> {
  * 검색 결과 포맷팅
  */
 function formatSearchResults(results: unknown[]): SearchResult[] {
-  return results.map((result: Record<string, any>) => ({
+  return results.map((result: any) => ({
     title: result.title || '',
     url: result.url || '',
     text: result.text || '',
@@ -262,6 +262,58 @@ function parseArtistAndTitle(title: string): { artist: string; title: string } {
   return {
     artist: '',
     title: title.trim()
+  }
+}
+
+/**
+ * 비슷한 영화 추천을 위한 웹 검색
+ */
+export async function searchSimilarMovies(movieTitle: string, genres: string[]): Promise<SearchResult[]> {
+  console.log(`🎬 비슷한 영화 검색: ${movieTitle}, 장르: ${genres.join(', ')}`)
+  
+  try {
+    const genreQuery = genres.join(' ')
+    const similarMoviesQuery = `${movieTitle} 비슷한 영화 추천 ${genreQuery} 장르`
+    
+    const results = await exa.searchAndContents(similarMoviesQuery, {
+      type: 'auto',
+      numResults: 5,
+      text: true,
+      livecrawl: 'fallback',
+      timeout: 5000,
+      textLength: 1500
+    })
+
+    return formatSearchResults(results.results)
+  } catch (error) {
+    console.error('비슷한 영화 검색 중 오류:', error)
+    return []
+  }
+}
+
+/**
+ * 비슷한 음악 추천을 위한 웹 검색
+ */
+export async function searchSimilarMusic(musicTitle: string, artist: string, genre?: string): Promise<SearchResult[]> {
+  console.log(`🎵 비슷한 음악 검색: ${musicTitle} - ${artist}`)
+  
+  try {
+    const genreInfo = genre ? ` ${genre}` : ''
+    const similarMusicQuery = `${musicTitle} ${artist} 비슷한 음악 추천${genreInfo} 장르`
+    
+    const results = await exa.searchAndContents(similarMusicQuery, {
+      type: 'auto',
+      numResults: 5,
+      text: true,
+      livecrawl: 'fallback',
+      timeout: 5000,
+      textLength: 1500
+    })
+
+    return formatSearchResults(results.results)
+  } catch (error) {
+    console.error('비슷한 음악 검색 중 오류:', error)
+    return []
   }
 }
 
