@@ -6,7 +6,9 @@ import SurveyLayout from '../../components/SurveyLayout'
 import ProgressIndicator from '../../components/ProgressIndicator'
 
 export default function PersonalExpressionPage() {
-  const [emotionalResponse, setEmotionalResponse] = useState('')
+  const [favoriteScene, setFavoriteScene] = useState('')
+  const [musicColor, setMusicColor] = useState('')
+  const [movieMeaning, setMovieMeaning] = useState('')
   const [loading, setLoading] = useState(false)
   const [analysisError, setAnalysisError] = useState<string | null>(null)
   const router = useRouter()
@@ -16,7 +18,9 @@ export default function PersonalExpressionPage() {
     const savedData = localStorage.getItem('surveyData')
     if (savedData) {
       const data = JSON.parse(savedData)
-      setEmotionalResponse(data.emotionalResponse || '')
+      setFavoriteScene(data.favoriteScene || '')
+      setMusicColor(data.musicColor || '')
+      setMovieMeaning(data.movieMeaning || '')
     }
   }, [])
 
@@ -27,7 +31,9 @@ export default function PersonalExpressionPage() {
     
     const updatedData = {
       ...existingData,
-      emotionalResponse
+      favoriteScene,
+      musicColor,
+      movieMeaning
     }
     
     localStorage.setItem('surveyData', JSON.stringify(updatedData))
@@ -142,7 +148,7 @@ export default function PersonalExpressionPage() {
         </div>
 
         <div className="space-y-6">
-          {/* 통합된 감정 질문 */}
+          {/* 질문 1: 가장 좋아하는 장면 */}
           <div 
             className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 space-y-4"
             style={{
@@ -152,17 +158,72 @@ export default function PersonalExpressionPage() {
           >
             <div className="space-y-2">
               <label className="block text-white font-medium text-sm">
-                선택한 영화 음악을 경험할 때, 어떤 감정이 느껴지시나요?
+                이 영화에서 가장 좋아하는 장면은 무엇인가요?
               </label>
               <p className="text-white/60 text-xs">
-                좋아하는 영화를 보거나 음악을 들을 때의 감정, 그때 떠오르는 생각이나 기억을 자유롭게 표현해주세요 (선택사항)
+                마음이 뭉클했던 장면, 계속 기억에 남는 장면 등 (선택사항)
               </p>
             </div>
             <textarea
-              value={emotionalResponse}
-              onChange={(e) => setEmotionalResponse(e.target.value)}
-              placeholder="예) 좋아하는 음악을 들으면 마음이 편안해지고 과거의 좋은 기억들이 떠올라요. 특히 친구들과 함께했던 순간들이나 행복했던 시절이 생각나면서 따뜻한 감정을 느껴요. 영화를 볼 때도 비슷해서 감동적인 장면에서는 눈물이 나기도 하고, 주인공에게 감정이입하면서 새로운 관점을 얻게 되는 것 같아요..."
-              className="w-full h-40 bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white text-sm placeholder-white/40 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 resize-none"
+              value={favoriteScene}
+              onChange={(e) => setFavoriteScene(e.target.value)}
+              placeholder="예) 주인공이 마지막에 진심을 고백하는 장면이 가장 인상적이었어요. 그 순간의 감정이 너무 진실되게 느껴져서 저도 모르게 눈물이 났습니다..."
+              className="w-full h-32 bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white text-sm placeholder-white/40 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 resize-none"
+              style={{
+                transform: 'perspective(500px) rotateX(1deg)',
+              }}
+            />
+          </div>
+
+          {/* 질문 2: 음악과 비슷한 색깔 */}
+          <div 
+            className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 space-y-4"
+            style={{
+              transform: 'perspective(1000px) rotateX(2deg) translateZ(10px)',
+              boxShadow: '0 15px 35px rgba(0, 0, 0, 0.2), 0 5px 15px rgba(139, 92, 246, 0.1)'
+            }}
+          >
+            <div className="space-y-2">
+              <label className="block text-white font-medium text-sm">
+                이 음악과 비슷한 색깔은 무엇인가요?
+              </label>
+              <p className="text-white/60 text-xs">
+                민트색, 노란색 등 (선택사항)
+              </p>
+            </div>
+            <input
+              type="text"
+              value={musicColor}
+              onChange={(e) => setMusicColor(e.target.value)}
+              placeholder="예) 따뜻한 주황색, 차분한 파란색, 로맨틱한 분홍색..."
+              className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white text-sm placeholder-white/40 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20"
+              style={{
+                transform: 'perspective(500px) rotateX(1deg)',
+              }}
+            />
+          </div>
+
+          {/* 질문 3: 영화의 의미 */}
+          <div 
+            className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 space-y-4"
+            style={{
+              transform: 'perspective(1000px) rotateX(2deg) translateZ(10px)',
+              boxShadow: '0 15px 35px rgba(0, 0, 0, 0.2), 0 5px 15px rgba(139, 92, 246, 0.1)'
+            }}
+          >
+            <div className="space-y-2">
+              <label className="block text-white font-medium text-sm">
+                당신에게 이 영화는 어떤 의미를 가지고 있나요?
+              </label>
+              <p className="text-white/60 text-xs">
+                위로가 되는 영화, 새로운 시선을 열어준 영화 등 (선택사항)
+              </p>
+            </div>
+            <textarea
+              value={movieMeaning}
+              onChange={(e) => setMovieMeaning(e.target.value)}
+              placeholder="예) 이 영화는 제게 위로가 되는 작품이에요. 힘들 때마다 보면서 용기를 얻고, 삶을 다른 관점에서 바라볼 수 있게 해주는 특별한 의미가 있습니다..."
+              className="w-full h-32 bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white text-sm placeholder-white/40 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 resize-none"
               style={{
                 transform: 'perspective(500px) rotateX(1deg)',
               }}

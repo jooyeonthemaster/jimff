@@ -86,16 +86,31 @@ export async function searchMusicData(musicTitle: string, artist?: string): Prom
   console.log(`🎵 음악 검색 시작: ${searchTerm}`)
   
   try {
-    // 1. 음악 기본 정보 검색
-    const basicInfoQuery = `${searchTerm} 곡 정보 앨범 발매일 장르`
-    const basicInfo = await exa.searchAndContents(basicInfoQuery, {
-      type: 'auto',
-      numResults: 3,
-      text: true,
-      livecrawl: 'fallback',
-      timeout: 5000,
-      textLength: 1500
-    })
+    // 1. 음악 기본 정보 검색 - 더 정확한 매칭을 위한 쿼리 개선
+    const basicInfoQueries = [
+      `"${artist}" "${musicTitle}" 곡 정보 앨범 발매일`,
+      `${searchTerm} song information album release`,
+      `${searchTerm} 음악 정보 장르`
+    ]
+    
+    let basicInfoResults: any[] = []
+    for (const query of basicInfoQueries) {
+      try {
+        const result = await exa.searchAndContents(query, {
+          type: 'auto',
+          numResults: 2,
+          text: true,
+          livecrawl: 'fallback',
+          timeout: 4000,
+          textLength: 1500
+        })
+        basicInfoResults.push(...result.results)
+      } catch (queryError) {
+        console.error(`기본 정보 검색 실패: ${query}`, queryError)
+      }
+    }
+    
+    const basicInfo = { results: basicInfoResults.slice(0, 4) }
 
     // 2. 가사 검색
     const lyricsQuery = `${searchTerm} 가사 lyrics`
@@ -226,7 +241,26 @@ function formatSearchResults(results: unknown[]): SearchResult[] {
     url: result.url || '',
     text: result.text || '',
     publishedDate: result.publishedDate
-  })).filter(result => result.text.length > 100) // 너무 짧은 결과 필터링
+  }))
+  .filter(result => result.text.length > 100) // 너무 짧은 결과 필터링
+  .filter(result => {
+    // 기본적인 품질 필터링 (너무 엄격하지 않게)
+    const text = result.text.toLowerCase()
+    const title = result.title.toLowerCase()
+    
+    // 관련성 있는 콘텐츠 식별
+    const hasRelevantInfo = text.includes('곡') || text.includes('음악') || text.includes('노래') || 
+                           text.includes('영화') || text.includes('추천') || text.includes('리스트') ||
+                           text.includes('song') || text.includes('track') || text.includes('artist') ||
+                           text.includes('movie') || text.includes('film') || text.includes('recommendation') ||
+                           title.includes('곡') || title.includes('음악') || title.includes('노래') ||
+                           title.includes('영화') || title.includes('추천') || title.includes('리스트') ||
+                           title.includes('song') || title.includes('track') || title.includes('artist') ||
+                           title.includes('movie') || title.includes('film') || title.includes('recommendation')
+    
+    // 관련 정보가 있거나 충분히 긴 텍스트는 포함 (기준 완화)
+    return hasRelevantInfo || result.text.length > 300
+  })
 }
 
 /**
@@ -266,25 +300,98 @@ function parseArtistAndTitle(title: string): { artist: string; title: string } {
 }
 
 /**
- * 비슷한 영화 추천을 위한 웹 검색
+ * 비슷한 영화 추천을 위한 웹 검색 - 다단계 검색 전략
  */
 export async function searchSimilarMovies(movieTitle: string, genres: string[]): Promise<SearchResult[]> {
   console.log(`🎬 비슷한 영화 검색: ${movieTitle}, 장르: ${genres.join(', ')}`)
   
   try {
     const genreQuery = genres.join(' ')
-    const similarMoviesQuery = `${movieTitle} 비슷한 영화 추천 ${genreQuery} 장르`
+    const allResults: SearchResult[] = []
     
-    const results = await exa.searchAndContents(similarMoviesQuery, {
-      type: 'auto',
-      numResults: 5,
-      text: true,
-      livecrawl: 'fallback',
-      timeout: 5000,
-      textLength: 1500
-    })
-
-    return formatSearchResults(results.results)
+    // 1단계: 구체적인 영화 기반 검색
+    const specificQueries = [
+      `${movieTitle} 비슷한 영화 추천 ${genreQuery}`,
+      `${movieTitle} 같은 장르 영화 추천`,
+      `"${movieTitle}" similar movies recommendations`
+    ]
+    
+    for (const query of specificQueries) {
+      try {
+        const results = await exa.searchAndContents(query, {
+          type: 'auto',
+          numResults: 3,
+          text: true,
+          livecrawl: 'fallback',
+          timeout: 5000,
+          textLength: 1800
+        })
+        allResults.push(...formatSearchResults(results.results))
+      } catch (queryError) {
+        console.error(`구체적 영화 검색 실패: ${query}`, queryError)
+      }
+    }
+    
+    // 2단계: 장르 기반 검색 (1단계 결과가 부족한 경우)
+    if (allResults.length < 4 && genres.length > 0) {
+      console.log('🎬 장르 기반 대안 검색 시작...')
+      const genreQueries = [
+        `${genreQuery} 영화 추천 명작 베스트`,
+        `${genreQuery} 장르 영화 리스트 추천`,
+        `best ${genreQuery} movies recommendations`
+      ]
+      
+      for (const query of genreQueries) {
+        try {
+          const results = await exa.searchAndContents(query, {
+            type: 'auto',
+            numResults: 4,
+            text: true,
+            livecrawl: 'fallback',
+            timeout: 5000,
+            textLength: 2000
+          })
+          allResults.push(...formatSearchResults(results.results))
+        } catch (queryError) {
+          console.error(`장르 기반 검색 실패: ${query}`, queryError)
+        }
+      }
+    }
+    
+    // 3단계: 일반적인 영화 추천 검색 (여전히 부족한 경우)
+    if (allResults.length < 3) {
+      console.log('🎬 일반적인 영화 추천 검색 시작...')
+      const generalQueries = [
+        `영화 추천 명작 베스트 리스트`,
+        `좋은 영화 추천 평점 높은`,
+        `movie recommendations best films`
+      ]
+      
+      for (const query of generalQueries) {
+        try {
+          const results = await exa.searchAndContents(query, {
+            type: 'auto',
+            numResults: 3,
+            text: true,
+            livecrawl: 'fallback',
+            timeout: 5000,
+            textLength: 1500
+          })
+          allResults.push(...formatSearchResults(results.results))
+        } catch (queryError) {
+          console.error(`일반 영화 검색 실패: ${query}`, queryError)
+        }
+      }
+    }
+    
+    // 중복 제거 및 최대 개수 제한
+    const uniqueResults = Array.from(
+      new Map(allResults.map(result => [result.url, result])).values()
+    ).slice(0, 12) // 더 많은 데이터 제공
+    
+    console.log(`🎬 영화 검색 완료: ${uniqueResults.length}개 결과`)
+    return uniqueResults
+    
   } catch (error) {
     console.error('비슷한 영화 검색 중 오류:', error)
     return []
@@ -292,25 +399,131 @@ export async function searchSimilarMovies(movieTitle: string, genres: string[]):
 }
 
 /**
- * 비슷한 음악 추천을 위한 웹 검색
+ * 비슷한 음악 추천을 위한 웹 검색 - 키워드 기반 검색 전략
  */
-export async function searchSimilarMusic(musicTitle: string, artist: string, genre?: string): Promise<SearchResult[]> {
+export async function searchSimilarMusic(musicTitle: string, artist: string, genre?: string, keywords?: string[]): Promise<SearchResult[]> {
   console.log(`🎵 비슷한 음악 검색: ${musicTitle} - ${artist}`)
+  if (keywords && keywords.length > 0) {
+    console.log(`🏷️ 키워드 기반 검색: ${keywords.join(', ')}`)
+  }
   
   try {
     const genreInfo = genre ? ` ${genre}` : ''
-    const similarMusicQuery = `${musicTitle} ${artist} 비슷한 음악 추천${genreInfo} 장르`
+    const allResults: SearchResult[] = []
     
-    const results = await exa.searchAndContents(similarMusicQuery, {
-      type: 'auto',
-      numResults: 5,
-      text: true,
-      livecrawl: 'fallback',
-      timeout: 5000,
-      textLength: 1500
-    })
+    // 1단계: 키워드 기반 검색 (키워드가 있는 경우)
+    if (keywords && keywords.length > 0) {
+      const keywordQuery = keywords.join(' ')
+      const keywordQueries = [
+        `${keywordQuery} 음악 추천 비슷한 곡`,
+        `${keywordQuery} 장르 노래 추천`,
+        `${keywordQuery} music recommendations similar songs`,
+        `${keywordQuery} 스타일 음악 리스트`
+      ]
+      
+      for (const query of keywordQueries) {
+        try {
+          const results = await exa.searchAndContents(query, {
+            type: 'auto',
+            numResults: 4,
+            text: true,
+            livecrawl: 'fallback',
+            timeout: 5000,
+            textLength: 1800
+          })
+          allResults.push(...formatSearchResults(results.results))
+        } catch (queryError) {
+          console.error(`키워드 기반 검색 실패: ${query}`, queryError)
+        }
+      }
+    }
+    
+    // 2단계: 장르 기반 검색 (키워드 검색 결과가 부족한 경우)
+    if (allResults.length < 4 && genreInfo) {
+      console.log('🎵 장르 기반 검색 시작...')
+      const genreQueries = [
+        `${genreInfo.trim()} 음악 추천 베스트`,
+        `${genreInfo.trim()} 장르 노래 추천 리스트`,
+        `best ${genreInfo.trim()} songs recommendations`
+      ]
+      
+      for (const query of genreQueries) {
+        try {
+          const results = await exa.searchAndContents(query, {
+            type: 'auto',
+            numResults: 4,
+            text: true,
+            livecrawl: 'fallback',
+            timeout: 5000,
+            textLength: 1800
+          })
+          allResults.push(...formatSearchResults(results.results))
+        } catch (queryError) {
+          console.error(`장르 기반 검색 실패: ${query}`, queryError)
+        }
+      }
+    }
+    
+    // 3단계: 구체적인 곡/아티스트 기반 검색 (여전히 부족한 경우에만)
+    if (allResults.length < 3) {
+      console.log('🎵 구체적 곡 기반 검색 시작...')
+      const specificQueries = [
+        `"${musicTitle}" 비슷한 음악 추천${genreInfo}`,
+        `${musicTitle} 같은 스타일 음악 추천`,
+        `similar songs to ${musicTitle} recommendations`
+      ]
+      
+      for (const query of specificQueries) {
+        try {
+          const results = await exa.searchAndContents(query, {
+            type: 'auto',
+            numResults: 3,
+            text: true,
+            livecrawl: 'fallback',
+            timeout: 5000,
+            textLength: 1800
+          })
+          allResults.push(...formatSearchResults(results.results))
+        } catch (queryError) {
+          console.error(`구체적 음악 검색 실패: ${query}`, queryError)
+        }
+      }
+    }
+    
+    // 4단계: 일반적인 음악 추천 검색 (여전히 부족한 경우)
+    if (allResults.length < 3) {
+      console.log('🎵 일반적인 음악 추천 검색 시작...')
+      const generalQueries = [
+        `음악 추천 베스트 명곡 리스트`,
+        `좋은 노래 추천 인기 음악`,
+        `popular music recommendations best songs`
+      ]
+      
+      for (const query of generalQueries) {
+        try {
+          const results = await exa.searchAndContents(query, {
+            type: 'auto',
+            numResults: 3,
+            text: true,
+            livecrawl: 'fallback',
+            timeout: 5000,
+            textLength: 1500
+          })
+          allResults.push(...formatSearchResults(results.results))
+        } catch (queryError) {
+          console.error(`일반 음악 검색 실패: ${query}`, queryError)
+        }
+      }
+    }
+    
+    // 중복 제거 및 최대 개수 제한
+    const uniqueResults = Array.from(
+      new Map(allResults.map(result => [result.url, result])).values()
+    ).slice(0, 12) // 더 많은 데이터 제공
 
-    return formatSearchResults(results.results)
+    console.log(`🎵 음악 검색 완료: ${uniqueResults.length}개 결과`)
+    return uniqueResults
+    
   } catch (error) {
     console.error('비슷한 음악 검색 중 오류:', error)
     return []

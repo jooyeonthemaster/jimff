@@ -254,7 +254,7 @@ export default function MusicInfoPage() {
   }
 
   const handleJIMFFPlaylist = () => {
-    window.open('https://www.youtube.com/playlist?list=PLYour_JIMFF_Playlist_ID', '_blank')
+    window.open('https://linktr.ee/jimffculture', '_blank')
   }
 
   const canProceed = movieTitle.trim() !== '' && movieDirector.trim() !== '' && musicTitle.trim() !== '' && musicArtist.trim() !== '' && musicYoutubeUrl.trim() !== ''
@@ -375,7 +375,7 @@ export default function MusicInfoPage() {
                 <button
                   onClick={extractMusicFromYoutube}
                   disabled={!musicYoutubeUrl || isExtracting}
-                  className="px-4 py-3 bg-gradient-to-r from-purple-500 to-blue-600 text-white rounded-xl text-xs font-medium hover:from-purple-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                  className="hidden px-4 py-3 bg-gradient-to-r from-purple-500 to-blue-600 text-white rounded-xl text-xs font-medium hover:from-purple-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                   style={{
                     transform: 'perspective(300px) rotateX(2deg)',
                     boxShadow: '0 8px 20px rgba(139, 92, 246, 0.4)'
