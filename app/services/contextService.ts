@@ -3,7 +3,7 @@
  * 음악/영화 분석에 도움이 될 수 있는 전문 라이브러리 정보를 수집
  */
 
-interface LibraryInfo {
+export interface LibraryInfo {
   name: string
   description: string
   documentation: string

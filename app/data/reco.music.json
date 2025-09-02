@@ -1,0 +1,922 @@
+[
+  {
+    "id": "lia-oyang-rusli-love-2020",
+    "title": "love",
+    "artist": "Lia Ouyang Rusli",
+    "album": "—",
+    "year": 2020,
+    "genres": ["인디", "팝"],
+    "keywords": ["서정적", "몽환적", "피아노", "잔잔함", "애절함", "감성"],
+    "emoji": "💗"
+  },
+  {
+    "id": "miles-davis-blue-in-green-1959",
+    "title": "Blue in Green",
+    "artist": "Miles Davis",
+    "album": "Kind of Blue",
+    "year": 1959,
+    "genres": ["재즈"],
+    "keywords": ["쿨재즈", "야상곡", "서정", "트럼펫", "피아노", "느림"],
+    "emoji": "🌙"
+  },
+  {
+    "id": "bjork-hyperballad-1995",
+    "title": "Hyperballad",
+    "artist": "Björk",
+    "album": "Post",
+    "year": 1995,
+    "genres": ["일렉트로닉", "팝"],
+    "keywords": ["감정폭발", "신스", "드라이브", "몽환", "여성보컬"],
+    "emoji": "⚡"
+  },
+  {
+    "id": "radiohead-how-to-disappear-2000",
+    "title": "How to Disappear Completely",
+    "artist": "Radiohead",
+    "album": "Kid A",
+    "year": 2000,
+    "genres": ["얼터너티브", "록"],
+    "keywords": ["우울", "현악", "공간감", "실험적", "몽환"],
+    "emoji": "👻"
+  },
+  {
+    "id": "nina-simone-feeling-good-1965",
+    "title": "Feeling Good",
+    "artist": "Nina Simone",
+    "album": "I Put a Spell on You",
+    "year": 1965,
+    "genres": ["재즈", "소울"],
+    "keywords": ["파워풀", "해방감", "브라스", "극적", "흑인음악"],
+    "emoji": "🦅"
+  },
+  {
+    "id": "aphex-twin-avril-14th-2001",
+    "title": "Avril 14th",
+    "artist": "Aphex Twin",
+    "album": "Drukqs",
+    "year": 2001,
+    "genres": ["앰비언트", "일렉트로닉"],
+    "keywords": ["피아노", "멜랑콜리", "미니멀", "IDM", "아름다움"],
+    "emoji": "🎹"
+  },
+  {
+    "id": "portishead-roads-1994",
+    "title": "Roads",
+    "artist": "Portishead",
+    "album": "Dummy",
+    "year": 1994,
+    "genres": ["트립합", "일렉트로닉"],
+    "keywords": ["어둠", "느림", "여성보컬", "브리스톨", "우울"],
+    "emoji": "🌧️"
+  },
+  {
+    "id": "fka-twigs-two-weeks-2014",
+    "title": "Two Weeks",
+    "artist": "FKA twigs",
+    "album": "LP1",
+    "year": 2014,
+    "genres": ["R&B", "일렉트로닉"],
+    "keywords": ["관능적", "실험적", "트랩", "아방가르드", "여성"],
+    "emoji": "💎"
+  },
+  {
+    "id": "bon-iver-holocene-2011",
+    "title": "Holocene",
+    "artist": "Bon Iver",
+    "album": "Bon Iver, Bon Iver",
+    "year": 2011,
+    "genres": ["인디", "포크"],
+    "keywords": ["팔세토", "자연", "고독", "어쿠스틱", "서정"],
+    "emoji": "🏔️"
+  },
+  {
+    "id": "sigur-ros-hoppipolla-2005",
+    "title": "Hoppípolla",
+    "artist": "Sigur Rós",
+    "album": "Takk...",
+    "year": 2005,
+    "genres": ["포스트록", "앰비언트"],
+    "keywords": ["아이슬란드", "서사적", "현악", "희망", "클라이맥스"],
+    "emoji": "🌈"
+  },
+  {
+    "id": "james-blake-retrograde-2013",
+    "title": "Retrograde",
+    "artist": "James Blake",
+    "album": "Overgrown",
+    "year": 2013,
+    "genres": ["일렉트로닉", "소울"],
+    "keywords": ["미니멀", "보코더", "감성", "공간감", "실험"],
+    "emoji": "🌊"
+  },
+  {
+    "id": "massive-attack-teardrop-1998",
+    "title": "Teardrop",
+    "artist": "Massive Attack",
+    "album": "Mezzanine",
+    "year": 1998,
+    "genres": ["트립합", "일렉트로닉"],
+    "keywords": ["하프", "어둠", "브리스톨", "신비", "리듬"],
+    "emoji": "💧"
+  },
+  {
+    "id": "frank-ocean-nights-2016",
+    "title": "Nights",
+    "artist": "Frank Ocean",
+    "album": "Blonde",
+    "year": 2016,
+    "genres": ["R&B", "힙합"],
+    "keywords": ["전환", "자전적", "몽환", "비트스위치", "퀴어"],
+    "emoji": "🌃"
+  },
+  {
+    "id": "solange-cranes-in-the-sky-2016",
+    "title": "Cranes in the Sky",
+    "artist": "Solange",
+    "album": "A Seat at the Table",
+    "year": 2016,
+    "genres": ["R&B", "소울"],
+    "keywords": ["흑인여성", "치유", "미니멀", "현악", "명상적"],
+    "emoji": "🕊️"
+  },
+  {
+    "id": "nick-drake-pink-moon-1972",
+    "title": "Pink Moon",
+    "artist": "Nick Drake",
+    "album": "Pink Moon",
+    "year": 1972,
+    "genres": ["포크"],
+    "keywords": ["어쿠스틱", "우울", "심플", "밤", "고독"],
+    "emoji": "🌕"
+  },
+  {
+    "id": "elliott-smith-between-the-bars-1997",
+    "title": "Between the Bars",
+    "artist": "Elliott Smith",
+    "album": "Either/Or",
+    "year": 1997,
+    "genres": ["인디", "포크"],
+    "keywords": ["속삭임", "중독", "어쿠스틱", "우울", "친밀함"],
+    "emoji": "🍺"
+  },
+  {
+    "id": "sufjan-stevens-death-with-dignity-2015",
+    "title": "Death with Dignity",
+    "artist": "Sufjan Stevens",
+    "album": "Carrie & Lowell",
+    "year": 2015,
+    "genres": ["인디", "포크"],
+    "keywords": ["상실", "어머니", "죽음", "섬세", "추모"],
+    "emoji": "🕯️"
+  },
+  {
+    "id": "phoebe-bridgers-motion-sickness-2017",
+    "title": "Motion Sickness",
+    "artist": "Phoebe Bridgers",
+    "album": "Stranger in the Alps",
+    "year": 2017,
+    "genres": ["인디", "록"],
+    "keywords": ["이별", "자조적", "위트", "기타", "젊음"],
+    "emoji": "🚗"
+  },
+  {
+    "id": "angel-olsen-shut-up-kiss-me-2016",
+    "title": "Shut Up Kiss Me",
+    "artist": "Angel Olsen",
+    "album": "MY WOMAN",
+    "year": 2016,
+    "genres": ["인디", "록"],
+    "keywords": ["빈티지", "60년대", "로맨틱", "파워풀", "여성"],
+    "emoji": "💋"
+  },
+  {
+    "id": "mitski-nobody-2018",
+    "title": "Nobody",
+    "artist": "Mitski",
+    "album": "Be the Cowboy",
+    "year": 2018,
+    "genres": ["인디", "팝"],
+    "keywords": ["고독", "디스코", "반복", "일본계", "아이러니"],
+    "emoji": "🕺"
+  },
+  {
+    "id": "japanese-breakfast-be-sweet-2021",
+    "title": "Be Sweet",
+    "artist": "Japanese Breakfast",
+    "album": "Jubilee",
+    "year": 2021,
+    "genres": ["인디", "팝"],
+    "keywords": ["80년대", "신스팝", "밝음", "한국계", "춤"],
+    "emoji": "🍰"
+  },
+  {
+    "id": "arca-time-2017",
+    "title": "Time",
+    "artist": "Arca",
+    "album": "Arca",
+    "year": 2017,
+    "genres": ["실험", "일렉트로닉"],
+    "keywords": ["퀴어", "해체", "보컬조작", "베네수엘라", "전위"],
+    "emoji": "⏰"
+  },
+  {
+    "id": "kelela-frontline-2017",
+    "title": "Frontline",
+    "artist": "Kelela",
+    "album": "Take Me Apart",
+    "year": 2017,
+    "genres": ["R&B", "일렉트로닉"],
+    "keywords": ["퓨처R&B", "정치적", "흑인여성", "클럽", "실험"],
+    "emoji": "⚔️"
+  },
+  {
+    "id": "blood-orange-best-to-you-2016",
+    "title": "Best to You",
+    "artist": "Blood Orange",
+    "album": "Freetown Sound",
+    "year": 2016,
+    "genres": ["R&B", "팝"],
+    "keywords": ["80년대", "퀴어", "흑인", "복고", "프린스"],
+    "emoji": "🍊"
+  },
+  {
+    "id": "sampha-no-one-knows-me-2017",
+    "title": "(No One Knows Me) Like the Piano",
+    "artist": "Sampha",
+    "album": "Process",
+    "year": 2017,
+    "genres": ["일렉트로닉", "소울"],
+    "keywords": ["피아노", "어머니", "감정적", "영국", "흑인"],
+    "emoji": "🎹"
+  },
+  {
+    "id": "sza-good-days-2020",
+    "title": "Good Days",
+    "artist": "SZA",
+    "album": "Good Days",
+    "year": 2020,
+    "genres": ["R&B", "소울"],
+    "keywords": ["치유", "긍정", "보컬", "흑인여성", "희망"],
+    "emoji": "☀️"
+  },
+  {
+    "id": "tyler-creator-see-you-again-2017",
+    "title": "See You Again",
+    "artist": "Tyler, The Creator",
+    "album": "Flower Boy",
+    "year": 2017,
+    "genres": ["힙합", "R&B"],
+    "keywords": ["사랑", "그리움", "멜로디", "성장", "퀴어"],
+    "emoji": "🌻"
+  },
+  {
+    "id": "kendrick-lamar-sing-about-me-2012",
+    "title": "Sing About Me, I'm Dying of Thirst",
+    "artist": "Kendrick Lamar",
+    "album": "good kid, m.A.A.d city",
+    "year": 2012,
+    "genres": ["힙합"],
+    "keywords": ["스토리텔링", "컴튼", "죽음", "구원", "서사"],
+    "emoji": "🎤"
+  },
+  {
+    "id": "earl-sweatshirt-chum-2012",
+    "title": "Chum",
+    "artist": "Earl Sweatshirt",
+    "album": "Chum",
+    "year": 2012,
+    "genres": ["힙합"],
+    "keywords": ["어둠", "아버지", "자전적", "우울", "내성적"],
+    "emoji": "🌑"
+  },
+  {
+    "id": "mf-doom-rapp-snitch-knishes-2004",
+    "title": "Rapp Snitch Knishes",
+    "artist": "MF DOOM",
+    "album": "MM..FOOD",
+    "year": 2004,
+    "genres": ["힙합"],
+    "keywords": ["샘플링", "유머", "마스크", "언더그라운드", "영리함"],
+    "emoji": "🎭"
+  },
+  {
+    "id": "jpegmafia-baby-im-bleeding-2018",
+    "title": "Baby I'm Bleeding",
+    "artist": "JPEGMAFIA",
+    "album": "Veteran",
+    "year": 2018,
+    "genres": ["힙합", "실험"],
+    "keywords": ["노이즈", "정치적", "공격적", "실험", "인터넷"],
+    "emoji": "🩸"
+  },
+  {
+    "id": "death-grips-get-got-2012",
+    "title": "Get Got",
+    "artist": "Death Grips",
+    "album": "The Money Store",
+    "year": 2012,
+    "genres": ["힙합", "실험"],
+    "keywords": ["노이즈", "산업", "공격적", "캘리포니아", "펑크"],
+    "emoji": "💀"
+  },
+  {
+    "id": "vince-staples-norf-norf-2015",
+    "title": "Norf Norf",
+    "artist": "Vince Staples",
+    "album": "Summertime '06",
+    "year": 2015,
+    "genres": ["힙합"],
+    "keywords": ["갱스터랩", "롱비치", "어둠", "현실", "차가움"],
+    "emoji": "🌴"
+  },
+  {
+    "id": "noname-diddy-bop-2016",
+    "title": "Diddy Bop",
+    "artist": "Noname",
+    "album": "Telefone",
+    "year": 2016,
+    "genres": ["힙합", "재즈"],
+    "keywords": ["시카고", "여성래퍼", "재즈힙합", "시적", "따뜻함"],
+    "emoji": "☎️"
+  },
+  {
+    "id": "little-simz-woman-2021",
+    "title": "Woman",
+    "artist": "Little Simz",
+    "album": "Sometimes I Might Be Introvert",
+    "year": 2021,
+    "genres": ["힙합", "소울"],
+    "keywords": ["영국", "여성", "아프로비트", "파워풀", "자긍심"],
+    "emoji": "👑"
+  },
+  {
+    "id": "rosalia-malamente-2018",
+    "title": "Malamente",
+    "artist": "Rosalía",
+    "album": "El Mal Querer",
+    "year": 2018,
+    "genres": ["플라멩코", "팝"],
+    "keywords": ["스페인", "전통", "현대", "박수", "실험"],
+    "emoji": "💃"
+  },
+  {
+    "id": "bad-bunny-yo-perreo-sola-2020",
+    "title": "Yo Perreo Sola",
+    "artist": "Bad Bunny",
+    "album": "YHLQMDLG",
+    "year": 2020,
+    "genres": ["레게톤", "라틴"],
+    "keywords": ["푸에르토리코", "페미니즘", "클럽", "댄스", "자유"],
+    "emoji": "🎭"
+  },
+  {
+    "id": "christine-and-queens-tilted-2014",
+    "title": "Tilted",
+    "artist": "Christine and the Queens",
+    "album": "Chaleur Humaine",
+    "year": 2014,
+    "genres": ["팝", "일렉트로닉"],
+    "keywords": ["프랑스", "퀴어", "안무", "젠더", "신스팝"],
+    "emoji": "💫"
+  },
+  {
+    "id": "stromae-papaoutai-2013",
+    "title": "Papaoutai",
+    "artist": "Stromae",
+    "album": "Racine Carrée",
+    "year": 2013,
+    "genres": ["팝", "일렉트로닉"],
+    "keywords": ["벨기에", "프랑스어", "아버지", "댄스", "사회비판"],
+    "emoji": "👨‍👦"
+  },
+  {
+    "id": "burna-boy-ye-2018",
+    "title": "Ye",
+    "artist": "Burna Boy",
+    "album": "Outside",
+    "year": 2018,
+    "genres": ["아프로비트", "팝"],
+    "keywords": ["나이지리아", "아프리카", "댄스", "긍정", "글로벌"],
+    "emoji": "🌍"
+  },
+  {
+    "id": "omar-souleyman-warni-warni-2013",
+    "title": "Warni Warni",
+    "artist": "Omar Souleyman",
+    "album": "Wenu Wenu",
+    "year": 2013,
+    "genres": ["월드", "일렉트로닉"],
+    "keywords": ["시리아", "결혼식", "댄스", "중동", "테크노"],
+    "emoji": "🎊"
+  },
+  {
+    "id": "tinariwen-sastanaqqam-2017",
+    "title": "Sastanàqqàm",
+    "artist": "Tinariwen",
+    "album": "Elwan",
+    "year": 2017,
+    "genres": ["월드", "록"],
+    "keywords": ["투아레그", "사하라", "기타", "블루스", "유목민"],
+    "emoji": "🏜️"
+  },
+  {
+    "id": "buena-vista-social-club-chan-chan-1997",
+    "title": "Chan Chan",
+    "artist": "Buena Vista Social Club",
+    "album": "Buena Vista Social Club",
+    "year": 1997,
+    "genres": ["월드", "라틴"],
+    "keywords": ["쿠바", "손", "노스탤지어", "전통", "따뜻함"],
+    "emoji": "🎸"
+  },
+  {
+    "id": "ali-farka-toure-savane-2006",
+    "title": "Savane",
+    "artist": "Ali Farka Touré",
+    "album": "Savane",
+    "year": 2006,
+    "genres": ["월드", "블루스"],
+    "keywords": ["말리", "사막블루스", "기타", "아프리카", "전통"],
+    "emoji": "🌾"
+  },
+  {
+    "id": "goat-diarabi-2012",
+    "title": "Diarabi",
+    "artist": "Goat",
+    "album": "World Music",
+    "year": 2012,
+    "genres": ["사이키델릭", "월드"],
+    "keywords": ["스웨덴", "아프로", "사이키", "부두", "익명"],
+    "emoji": "🐐"
+  },
+  {
+    "id": "king-gizzard-rattlesnake-2017",
+    "title": "Rattlesnake",
+    "artist": "King Gizzard & The Lizard Wizard",
+    "album": "Flying Microtonal Banana",
+    "year": 2017,
+    "genres": ["사이키델릭", "록"],
+    "keywords": ["호주", "마이크로톤", "반복", "사막", "최면"],
+    "emoji": "🐍"
+  },
+  {
+    "id": "tame-impala-feels-like-we-only-go-backwards-2012",
+    "title": "Feels Like We Only Go Backwards",
+    "artist": "Tame Impala",
+    "album": "Lonerism",
+    "year": 2012,
+    "genres": ["사이키델릭", "록"],
+    "keywords": ["호주", "역행", "몽환", "신스", "60년대"],
+    "emoji": "🌀"
+  },
+  {
+    "id": "unknown-mortal-orchestra-multi-love-2015",
+    "title": "Multi-Love",
+    "artist": "Unknown Mortal Orchestra",
+    "album": "Multi-Love",
+    "year": 2015,
+    "genres": ["사이키델릭", "팝"],
+    "keywords": ["뉴질랜드", "폴리아모리", "펑크", "프린스", "실험"],
+    "emoji": "❤️‍🔥"
+  },
+  {
+    "id": "mgmt-time-to-pretend-2007",
+    "title": "Time to Pretend",
+    "artist": "MGMT",
+    "album": "Oracular Spectacular",
+    "year": 2007,
+    "genres": ["사이키델릭", "팝"],
+    "keywords": ["인디", "신스", "청춘", "아이러니", "환상"],
+    "emoji": "🎪"
+  },
+  {
+    "id": "glass-animals-gooey-2014",
+    "title": "Gooey",
+    "artist": "Glass Animals",
+    "album": "ZABA",
+    "year": 2014,
+    "genres": ["인디", "일렉트로닉"],
+    "keywords": ["영국", "트로피컬", "끈적함", "관능", "정글"],
+    "emoji": "🍯"
+  },
+  {
+    "id": "alt-j-breezeblocks-2012",
+    "title": "Breezeblocks",
+    "artist": "alt-J",
+    "album": "An Awesome Wave",
+    "year": 2012,
+    "genres": ["인디", "록"],
+    "keywords": ["영국", "삼각형", "수학", "긴장", "실험"],
+    "emoji": "🔺"
+  },
+  {
+    "id": "beach-house-space-song-2015",
+    "title": "Space Song",
+    "artist": "Beach House",
+    "album": "Depression Cherry",
+    "year": 2015,
+    "genres": ["드림팝", "인디"],
+    "keywords": ["우주", "몽환", "신스", "볼티모어", "떠다님"],
+    "emoji": "🌌"
+  },
+  {
+    "id": "cocteau-twins-lorelei-1984",
+    "title": "Lorelei",
+    "artist": "Cocteau Twins",
+    "album": "Treasure",
+    "year": 1984,
+    "genres": ["드림팝", "포스트펑크"],
+    "keywords": ["스코틀랜드", "천상", "글로시", "해독불가", "에테르"],
+    "emoji": "🧚"
+  },
+  {
+    "id": "my-bloody-valentine-only-shallow-1991",
+    "title": "Only Shallow",
+    "artist": "My Bloody Valentine",
+    "album": "Loveless",
+    "year": 1991,
+    "genres": ["슈게이즈", "노이즈"],
+    "keywords": ["아일랜드", "기타벽", "소음", "아름다움", "혁신"],
+    "emoji": "🎸"
+  },
+  {
+    "id": "slowdive-when-the-sun-hits-1991",
+    "title": "When the Sun Hits",
+    "artist": "Slowdive",
+    "album": "Souvlaki",
+    "year": 1993,
+    "genres": ["슈게이즈", "드림팝"],
+    "keywords": ["영국", "리버브", "태양", "젊음", "녹아내림"],
+    "emoji": "☀️"
+  },
+  {
+    "id": "godspeed-you-black-emperor-storm-2000",
+    "title": "Storm",
+    "artist": "Godspeed You! Black Emperor",
+    "album": "Lift Your Skinny Fists Like Antennas to Heaven",
+    "year": 2000,
+    "genres": ["포스트록", "실험"],
+    "keywords": ["캐나다", "서사", "무정부", "영화적", "종말"],
+    "emoji": "⛈️"
+  },
+  {
+    "id": "explosions-in-the-sky-your-hand-in-mine-2003",
+    "title": "Your Hand in Mine",
+    "artist": "Explosions in the Sky",
+    "album": "The Earth Is Not a Cold Dead Place",
+    "year": 2003,
+    "genres": ["포스트록", "인스트루멘탈"],
+    "keywords": ["텍사스", "감동", "기타", "영화음악", "희망"],
+    "emoji": "🤝"
+  },
+  {
+    "id": "mogwai-cody-1999",
+    "title": "Cody",
+    "artist": "Mogwai",
+    "album": "Come On Die Young",
+    "year": 1999,
+    "genres": ["포스트록"],
+    "keywords": ["스코틀랜드", "조용함", "폭발", "다이내믹", "우울"],
+    "emoji": "🏴󐁧󐁢󐁳󐁣󐁴󐁿"
+  },
+  {
+    "id": "swans-screen-shot-2014",
+    "title": "Screen Shot",
+    "artist": "Swans",
+    "album": "To Be Kind",
+    "year": 2014,
+    "genres": ["실험", "노이즈록"],
+    "keywords": ["극단적", "반복", "폭력적", "최면", "거대함"],
+    "emoji": "🦢"
+  },
+  {
+    "id": "deafheaven-dream-house-2013",
+    "title": "Dream House",
+    "artist": "Deafheaven",
+    "album": "Sunbather",
+    "year": 2013,
+    "genres": ["블랙게이즈", "메탈"],
+    "keywords": ["샌프란시스코", "슈게이즈메탈", "아름다움", "극단", "핑크"],
+    "emoji": "🌸"
+  },
+  {
+    "id": "sunn-o-it-took-the-night-2009",
+    "title": "It Took the Night to Believe",
+    "artist": "Sunn O)))",
+    "album": "Monoliths & Dimensions",
+    "year": 2009,
+    "genres": ["드론", "둠메탈"],
+    "keywords": ["극저음", "느림", "의식", "어둠", "실험"],
+    "emoji": "🌑"
+  },
+  {
+    "id": "boris-farewell-2005",
+    "title": "Farewell",
+    "artist": "Boris",
+    "album": "Pink",
+    "year": 2005,
+    "genres": ["스톤너록", "둠"],
+    "keywords": ["일본", "무거움", "사이키", "드론", "소음"],
+    "emoji": "🇯🇵"
+  },
+  {
+    "id": "electric-wizard-funeralopolis-2000",
+    "title": "Funeralopolis",
+    "artist": "Electric Wizard",
+    "album": "Dopethrone",
+    "year": 2000,
+    "genres": ["둠메탈", "스톤너"],
+    "keywords": ["영국", "대마초", "오컬트", "느림", "무거움"],
+    "emoji": "🧙"
+  },
+  {
+    "id": "sleep-dopesmoker-2003",
+    "title": "Dopesmoker",
+    "artist": "Sleep",
+    "album": "Dopesmoker",
+    "year": 2003,
+    "genres": ["둠", "스톤너록"],
+    "keywords": ["63분", "한곡", "대마초", "사막", "의식"],
+    "emoji": "🚬"
+  },
+  {
+    "id": "lightning-bolt-dracula-mountain-2003",
+    "title": "Dracula Mountain",
+    "artist": "Lightning Bolt",
+    "album": "Wonderful Rainbow",
+    "year": 2003,
+    "genres": ["노이즈록", "실험"],
+    "keywords": ["듀오", "베이스", "드럼", "혼돈", "에너지"],
+    "emoji": "⚡"
+  },
+  {
+    "id": "black-midi-953-2019",
+    "title": "953",
+    "artist": "black midi",
+    "album": "Schlagenheim",
+    "year": 2019,
+    "genres": ["매스록", "실험"],
+    "keywords": ["영국", "복잡함", "젊음", "혼돈", "기술적"],
+    "emoji": "🎲"
+  },
+  {
+    "id": "battles-atlas-2007",
+    "title": "Atlas",
+    "artist": "Battles",
+    "album": "Mirrored",
+    "year": 2007,
+    "genres": ["매스록", "실험"],
+    "keywords": ["뉴욕", "루프", "보코더", "수학적", "댄스"],
+    "emoji": "🗺️"
+  },
+  {
+    "id": "hella-biblical-violence-2002",
+    "title": "Biblical Violence",
+    "artist": "Hella",
+    "album": "Hold Your Horse Is",
+    "year": 2002,
+    "genres": ["매스록", "노이즈"],
+    "keywords": ["듀오", "드럼", "기타", "캘리포니아", "혼돈"],
+    "emoji": "🐴"
+  },
+  {
+    "id": "oneohtrix-point-never-replica-2011",
+    "title": "Replica",
+    "artist": "Oneohtrix Point Never",
+    "album": "Replica",
+    "year": 2011,
+    "genres": ["앰비언트", "실험"],
+    "keywords": ["샘플링", "광고", "노스탤지어", "해체", "몽환"],
+    "emoji": "📼"
+  },
+  {
+    "id": "tim-hecker-virgins-2013",
+    "title": "Virginal I",
+    "artist": "Tim Hecker",
+    "album": "Virgins",
+    "year": 2013,
+    "genres": ["앰비언트", "노이즈"],
+    "keywords": ["캐나다", "오르간", "파괴", "종교적", "장엄"],
+    "emoji": "⛪"
+  },
+  {
+    "id": "fennesz-endless-summer-2001",
+    "title": "Endless Summer",
+    "artist": "Fennesz",
+    "album": "Endless Summer",
+    "year": 2001,
+    "genres": ["앰비언트", "글리치"],
+    "keywords": ["오스트리아", "기타", "노이즈", "여름", "노스탤지어"],
+    "emoji": "🏖️"
+  },
+  {
+    "id": "grouper-heavy-water-2011",
+    "title": "Heavy Water/I'd Rather Be Sleeping",
+    "artist": "Grouper",
+    "album": "A I A: Alien Observer",
+    "year": 2011,
+    "genres": ["앰비언트", "드론"],
+    "keywords": ["포틀랜드", "안개", "목소리", "물", "유령"],
+    "emoji": "💧"
+  },
+  {
+    "id": "julianna-barwick-nebula-2013",
+    "title": "Nebula",
+    "artist": "Julianna Barwick",
+    "album": "Nepenthe",
+    "year": 2013,
+    "genres": ["앰비언트", "보컬"],
+    "keywords": ["루프", "목소리", "천상", "아이슬란드", "성가"],
+    "emoji": "🌌"
+  },
+  {
+    "id": "laurel-halo-years-2017",
+    "title": "Jelly",
+    "artist": "Laurel Halo",
+    "album": "Dust",
+    "year": 2017,
+    "genres": ["실험", "일렉트로닉"],
+    "keywords": ["해체", "재즈", "불안", "미국", "추상"],
+    "emoji": "🎭"
+  },
+  {
+    "id": "holly-herndon-chorus-2014",
+    "title": "Chorus",
+    "artist": "Holly Herndon",
+    "album": "Platform",
+    "year": 2015,
+    "genres": ["실험", "일렉트로닉"],
+    "keywords": ["AI", "목소리", "기술", "미래", "집단"],
+    "emoji": "🤖"
+  },
+  {
+    "id": "sophie-immaterial-2018",
+    "title": "Immaterial",
+    "artist": "SOPHIE",
+    "album": "Oil of Every Pearl's Un-Insides",
+    "year": 2018,
+    "genres": ["하이퍼팝", "일렉트로닉"],
+    "keywords": ["트랜스", "미래", "팝", "극단", "변형"],
+    "emoji": "💎"
+  },
+  {
+    "id": "100-gecs-money-machine-2019",
+    "title": "money machine",
+    "artist": "100 gecs",
+    "album": "1000 gecs",
+    "year": 2019,
+    "genres": ["하이퍼팝", "실험"],
+    "keywords": ["인터넷", "혼돈", "오토튠", "극단", "Z세대"],
+    "emoji": "💰"
+  },
+  {
+    "id": "charli-xcx-vroom-vroom-2016",
+    "title": "Vroom Vroom",
+    "artist": "Charli XCX",
+    "album": "Vroom Vroom EP",
+    "year": 2016,
+    "genres": ["하이퍼팝", "팝"],
+    "keywords": ["PC뮤직", "미래팝", "자동차", "영국", "극대화"],
+    "emoji": "🏎️"
+  },
+  {
+    "id": "ag-cook-beautiful-2020",
+    "title": "Beautiful",
+    "artist": "A. G. Cook",
+    "album": "7G",
+    "year": 2020,
+    "genres": ["하이퍼팝", "일렉트로닉"],
+    "keywords": ["PC뮤직", "해체", "팝", "실험", "다층적"],
+    "emoji": "🌈"
+  },
+  {
+    "id": "dorian-electra-flamboyant-2019",
+    "title": "Flamboyant",
+    "artist": "Dorian Electra",
+    "album": "Flamboyant",
+    "year": 2019,
+    "genres": ["하이퍼팝", "일렉트로닉"],
+    "keywords": ["젠더", "바로크", "과장", "퀴어", "연극적"],
+    "emoji": "🦚"
+  },
+  {
+    "id": "ryuichi-sakamoto-merry-christmas-1983",
+    "title": "Merry Christmas Mr. Lawrence",
+    "artist": "Ryuichi Sakamoto",
+    "album": "Merry Christmas Mr. Lawrence OST",
+    "year": 1983,
+    "genres": ["영화음악", "클래식"],
+    "keywords": ["일본", "전쟁", "피아노", "영화", "애절"],
+    "emoji": "🎄"
+  },
+  {
+    "id": "jonny-greenwood-house-2007",
+    "title": "Oil",
+    "artist": "Jonny Greenwood",
+    "album": "There Will Be Blood OST",
+    "year": 2007,
+    "genres": ["영화음악", "오케스트라"],
+    "keywords": ["현악", "긴장", "불협화음", "서부", "탐욕"],
+    "emoji": "🛢️"
+  },
+  {
+    "id": "mica-levi-love-2013",
+    "title": "Love",
+    "artist": "Mica Levi",
+    "album": "Under the Skin OST",
+    "year": 2013,
+    "genres": ["영화음악", "실험"],
+    "keywords": ["외계인", "불안", "현악", "기이함", "공포"],
+    "emoji": "👽"
+  },
+  {
+    "id": "hans-zimmer-time-2010",
+    "title": "Time",
+    "artist": "Hans Zimmer",
+    "album": "Inception OST",
+    "year": 2010,
+    "genres": ["영화음악", "오케스트라"],
+    "keywords": ["꿈", "시간", "장엄", "감동", "클라이맥스"],
+    "emoji": "⏳"
+  },
+  {
+    "id": "clint-mansell-lux-aeterna-2000",
+    "title": "Lux Aeterna",
+    "artist": "Clint Mansell",
+    "album": "Requiem for a Dream OST",
+    "year": 2000,
+    "genres": ["영화음악", "오케스트라"],
+    "keywords": ["중독", "비극", "현악", "강렬", "절망"],
+    "emoji": "💊"
+  },
+  {
+    "id": "trent-reznor-hand-covers-bruise-2010",
+    "title": "Hand Covers Bruise",
+    "artist": "Trent Reznor & Atticus Ross",
+    "album": "The Social Network OST",
+    "year": 2010,
+    "genres": ["영화음악", "앰비언트"],
+    "keywords": ["기술", "고독", "피아노", "전자음", "차가움"],
+    "emoji": "💻"
+  },
+  {
+    "id": "philip-glass-koyaanisqatsi-1982",
+    "title": "Koyaanisqatsi",
+    "artist": "Philip Glass",
+    "album": "Koyaanisqatsi OST",
+    "year": 1982,
+    "genres": ["미니멀리즘", "클래식"],
+    "keywords": ["반복", "균형", "자연", "문명", "명상"],
+    "emoji": "🌍"
+  },
+  {
+    "id": "steve-reich-music-18-musicians-1978",
+    "title": "Music for 18 Musicians",
+    "artist": "Steve Reich",
+    "album": "Music for 18 Musicians",
+    "year": 1978,
+    "genres": ["미니멀리즘", "클래식"],
+    "keywords": ["위상변화", "맥놀이", "반복", "트랜스", "혁신"],
+    "emoji": "🎼"
+  },
+  {
+    "id": "arvo-part-spiegel-im-spiegel-1978",
+    "title": "Spiegel im Spiegel",
+    "artist": "Arvo Pärt",
+    "album": "Für Alina",
+    "year": 1978,
+    "genres": ["미니멀리즘", "클래식"],
+    "keywords": ["에스토니아", "종교", "단순", "거울", "명상"],
+    "emoji": "🪞"
+  },
+  {
+    "id": "max-richter-on-the-nature-2004",
+    "title": "On the Nature of Daylight",
+    "artist": "Max Richter",
+    "album": "The Blue Notebooks",
+    "year": 2004,
+    "genres": ["포스트클래식", "앰비언트"],
+    "keywords": ["현악", "슬픔", "영화음악", "감동", "현대클래식"],
+    "emoji": "🌅"
+  },
+  {
+    "id": "nils-frahm-says-2013",
+    "title": "Says",
+    "artist": "Nils Frahm",
+    "album": "Spaces",
+    "year": 2013,
+    "genres": ["포스트클래식", "앰비언트"],
+    "keywords": ["독일", "피아노", "신스", "라이브", "점진적"],
+    "emoji": "🎹"
+  },
+  {
+    "id": "olafur-arnalds-near-light-2013",
+    "title": "Near Light",
+    "artist": "Ólafur Arnalds",
+    "album": "For Now I Am Winter",
+    "year": 2013,
+    "genres": ["포스트클래식", "앰비언트"],
+    "keywords": ["아이슬란드", "현악", "피아노", "영화적", "섬세"],
+    "emoji": "❄️"
+  }
+]

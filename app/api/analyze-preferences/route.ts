@@ -5,14 +5,26 @@ import {
   searchMusicData, 
   searchMusicFromYouTube, 
   searchFragranceKnowledge,
-  searchSimilarMovies,
-  searchSimilarMusic,
-  formatSearchDataForAI 
+  // searchSimilarMovies,
+  // searchSimilarMusic,
+  formatSearchDataForAI,
+  extractMovieFacts
 } from '../../services/searchService'
+import type { MovieSearchData } from '../../services/searchService'
+import type { RecoMovieItem, RecoMusicItem } from '../../data/reco.types'
+import recoMovies from '../../data/reco.movies.json'
+import recoMusic from '../../data/reco.music.json'
+import { 
+  pickSimilarMoviesFromPool,
+  pickSimilarMusicFromPool,
+  mapMovieItemToResponse,
+  mapMusicItemToResponse
+} from '../../services/recoService'
 import { 
   getAllRelevantLibraries,
   formatLibraryInfoForAI 
 } from '../../services/contextService'
+import type { LibraryInfo } from '../../services/contextService'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
@@ -154,12 +166,11 @@ export async function POST(request: NextRequest) {
     // 🔍 웹 검색을 통한 실제 데이터 수집
     console.log('🌐 웹 검색 데이터 수집 시작...')
     
-    let movieSearchData = null
-    let musicSearchData = null
-    let fragranceKnowledge = null
-    let similarMoviesData: any[] = []
-    let similarMusicData: any[] = []
-    let libraryInfo: { music: any[], movie: any[], fragrance: any[] } | null = null
+    let movieSearchData: MovieSearchData | null = null
+    let musicSearchData: unknown = null
+    let fragranceKnowledge: unknown = null
+    // 웹 추천 검색 제거: 하드코딩 추천 풀 사용
+    let libraryInfo: { music: LibraryInfo[]; movie: LibraryInfo[]; fragrance: LibraryInfo[] } | null = null
 
     // 병렬로 모든 검색 수행
     const searchPromises = []
@@ -167,8 +178,14 @@ export async function POST(request: NextRequest) {
     // 1. 영화 데이터 검색
     if (data.movieTitle) {
       searchPromises.push(
-        searchMovieData(data.movieTitle).then(result => {
+        searchMovieData(data.movieTitle, data.movieDirector || undefined).then(result => {
           movieSearchData = result
+          try {
+            const facts = extractMovieFacts(result, data.movieDirector || undefined)
+            console.log('🧾 추출된 영화 메타데이터:', facts)
+          } catch (e) {
+            console.warn('영화 메타데이터 추출 실패:', e)
+          }
           console.log('✅ 영화 검색 완료:', data.movieTitle)
         }).catch(error => {
           console.error('❌ 영화 검색 실패:', error)
@@ -210,30 +227,7 @@ export async function POST(request: NextRequest) {
       })
     )
 
-    // 4. 비슷한 영화 추천 검색
-    if (data.movieTitle) {
-      searchPromises.push(
-        searchSimilarMovies(data.movieTitle, data.movieGenres).then(result => {
-          similarMoviesData = result
-          console.log('✅ 비슷한 영화 검색 완료')
-        }).catch(error => {
-          console.error('❌ 비슷한 영화 검색 실패:', error)
-        })
-      )
-    }
-
-    // 5. 비슷한 음악 추천 검색 (일단 기본 검색으로 진행, 나중에 키워드로 재검색)
-    if (data.musicTitle) {
-      const artist = data.extractedMusicArtist || data.musicArtist || ''
-      searchPromises.push(
-        searchSimilarMusic(data.musicTitle, artist).then(result => {
-          similarMusicData = result
-          console.log('✅ 비슷한 음악 검색 완료')
-        }).catch(error => {
-          console.error('❌ 비슷한 음악 검색 실패:', error)
-        })
-      )
-    }
+    // 비슷한 영화/음악: 웹 검색 비활성화 (하드코딩 풀 사용)
 
     // 6. 관련 라이브러리 정보 수집
     searchPromises.push(
@@ -291,58 +285,37 @@ export async function POST(request: NextRequest) {
 
     // 🧠 수집된 데이터를 AI 분석용 컨텍스트로 변환
     let searchContext = ''
-    let recommendationContext = ''
     let libraryContext = ''
 
     if (movieSearchData || musicSearchData || fragranceKnowledge) {
       searchContext = formatSearchDataForAI(
         movieSearchData || undefined,
-        musicSearchData || undefined, 
-        fragranceKnowledge || undefined
+        (musicSearchData as any) || undefined, 
+        (fragranceKnowledge as any) || undefined
       )
       console.log('📝 검색 컨텍스트 생성 완료 (', searchContext.length, '자)')
     }
 
-    // 추천 컨텍스트 생성
-    if (similarMoviesData || similarMusicData) {
-      recommendationContext = `## 추천 참고 데이터\n\n`
-      
-      if (similarMoviesData && similarMoviesData.length > 0) {
-        recommendationContext += `### 🎬 비슷한 영화 참고 자료\n\n`
-        similarMoviesData.forEach((movie, idx) => {
-          recommendationContext += `**참고 ${idx + 1}**: ${movie.title}\n${movie.text.slice(0, 500)}...\n\n`
-        })
-      }
-
-      if (similarMusicData && similarMusicData.length > 0) {
-        recommendationContext += `### 🎵 비슷한 음악 참고 자료\n\n`
-        similarMusicData.forEach((music, idx) => {
-          recommendationContext += `**참고 ${idx + 1}**: ${music.title}\n${music.text.slice(0, 500)}...\n\n`
-        })
-      }
-
-      recommendationContext += `위의 실제 웹 데이터를 참고하여 정확하고 실존하는 영화/음악만 추천해주세요.\n\n`
-      recommendationContext += `🚨 **아티스트-곡명 매칭 검증 필수**:\n`
-      recommendationContext += `- 추천하는 모든 곡에 대해 위의 검색 데이터에서 해당 아티스트와 곡명이 함께 언급되는지 반드시 확인\n`
-      recommendationContext += `- 곡명만 언급되고 아티스트가 다르거나 불분명한 경우 절대 추천 금지\n`
-      recommendationContext += `- 예: "데스페라도"라는 곡이 언급되어도 LiSA와 함께 언급되지 않으면 LiSA의 곡으로 추천하면 안됨\n\n`
-      recommendationContext += `📊 **데이터 부족 시 대응 방안**:\n`
-      recommendationContext += `- 검색 데이터가 부족하거나 마이너한 작품인 경우, 당신의 AI 지식을 활용하여 실존하는 작품을 추천할 수 있습니다\n`
-      recommendationContext += `- 단, 반드시 실제 존재하는 영화/음악이어야 하며, 정확한 정보만 사용하세요\n`
-      recommendationContext += `- 장르나 테마가 유사한 작품을 우선적으로 고려하세요\n\n`
-      recommendationContext += `🏷️ **키워드 기반 음악 검색 활용 - 중요!**:\n`
-      recommendationContext += `- 🚨 음악 추천 시 사용자가 입력한 원래 곡명("${data.musicTitle}")과 아티스트("${data.musicArtist || data.extractedMusicArtist}")는 절대 추천하지 마세요!\n`
-      recommendationContext += `- 대신 분석한 음악의 상징 키워드를 바탕으로 **완전히 다른** 유사한 곡들을 찾으세요\n`
-      recommendationContext += `- 검색 데이터에서 실제 아티스트와 곡명이 명시된 **새로운** 정보만 사용하세요\n`
-      recommendationContext += `- 같은 곡명이나 같은 아티스트는 절대 추천 금지!\n\n`
-      console.log('📝 추천 컨텍스트 생성 완료 (', recommendationContext.length, '자)')
-    }
+    // 추천 풀은 프롬프트에 주입하지 않음 (대용량). 서버에서 풀 기반으로 선별하여 응답에 반영.
 
     if (libraryInfo) {
-      const libInfo = libraryInfo as { music: any[], movie: any[], fragrance: any[] }
-      libraryContext = formatLibraryInfoForAI(libInfo.music, libInfo.movie, libInfo.fragrance)
+      const li = libraryInfo as { music: LibraryInfo[]; movie: LibraryInfo[]; fragrance: LibraryInfo[] }
+      libraryContext = formatLibraryInfoForAI(li.music, li.movie, li.fragrance)
       console.log('📚 라이브러리 컨텍스트 생성 완료 (', libraryContext.length, '자)')
     }
+
+    // 검색 데이터에서 확정 메타데이터 선반영
+    let forcedMovieYear: string | undefined
+    let forcedMovieGenres: string[] | undefined
+    let forcedMovieDescription: string | undefined
+    try {
+      if (movieSearchData) {
+        const facts = extractMovieFacts(movieSearchData, data.movieDirector || undefined)
+        forcedMovieYear = facts.year
+        forcedMovieGenres = facts.genres
+        forcedMovieDescription = facts.description
+      }
+    } catch {}
 
     const prompt = `
 당신은 세계적인 향수 전문가입니다. 20년 이상의 경험을 바탕으로 다음 사용자의 영화/음악 취향을 분석하여 맞춤 향수를 추천해주세요.
@@ -350,8 +323,6 @@ export async function POST(request: NextRequest) {
 **🇰🇷 CRITICAL: 모든 응답은 반드시 한국어로 작성하세요. 절대 영어나 다른 언어를 사용하지 마세요.**
 
 ${searchContext ? `${searchContext}\n` : ''}
-
-${recommendationContext ? `${recommendationContext}\n` : ''}
 
 ${libraryContext ? `${libraryContext}\n` : ''}
 
@@ -462,44 +433,23 @@ ${libraryContext ? `${libraryContext}\n` : ''}
 
 ※ 선택한 영화와 선호 장르가 다를 수 있음을 인정하고 솔직하게 분석할 것
 
-[비슷한 영화 추천 규칙 - 정확성 최우선]
-**🚨 CRITICAL: 추천 섹션에서는 검색 데이터를 최우선으로 활용하여 실존하는 영화만 추천하세요!**
-**⚠️ 주의: 분석된 영화 섹션과 달리, 추천 섹션에서는 검색 결과가 우선입니다!**
+[비슷한 영화 추천 규칙 - 고정 풀 전용]
+**🚨 검색 금지. 오직 위의 "영화 풀" 항목 중에서만 2편을 선택하세요.**
+**⚠️ 제목/감독/연도/장르 값은 풀에 적힌 값을 그대로 사용하세요. 임의 수정 금지.**
 
-사용자가 입력한 영화와 선호 장르를 바탕으로 2편의 비슷한 영화를 추천하세요:
-1. **🚨 실존 확인 필수**: 위의 웹 검색 데이터에서 실제로 언급된 영화만 추천. 검색 데이터에 없는 영화는 절대 추천 금지
-2. **정보 정확성 검증**: 영화 제목, 감독명, 출시년도를 검색 데이터에서 확인된 정보만 사용
-3. **더블 체크**: 유명한 영화라도 검색 데이터에 없으면 추천하지 않음
-4. **장르적 유사성**: 사용자 선호 장르와 매칭
-5. **감정적 톤 매칭**: 입력 영화와 비슷한 분위기
-6. **추천 이유**: 구체적이고 명확한 이유 (80자 이내)
-7. **이모지 선택**: 영화를 상징하는 적절한 이모지
+선택 기준:
+1. 사용자 선호 장르/분석된 영화의 키워드와 풀의 키워드/장르 유사도
+2. 감정적 톤/테마 유사성
+3. 너무 중복되지 않도록 서로 다른 스펙트럼에서 2편 선택
 
-⚠️ **절대 가상의 영화나 부정확한 정보를 만들어내지 마세요!**
-⚠️ **검색 데이터 우선 원칙**: 검색 데이터에 충분한 정보가 있다면 반드시 그것을 활용하세요
-⚠️ **AI 지식 활용 허용**: 검색 데이터가 부족한 경우에만 당신의 내재된 지식을 활용하여 실제 존재하는 영화를 추천할 수 있습니다
-⚠️ **정확성 검증**: AI 지식을 활용할 때도 반드시 실존하는 영화, 정확한 감독명, 출시년도만 사용하세요
+[비슷한 음악 추천 규칙 - 고정 풀 전용]
+**🚨 검색 금지. 오직 위의 "음악 풀" 항목 중에서만 2곡을 선택하세요.**
+**⚠️ 제목/아티스트/앨범/연도/장르 값은 풀에 적힌 값을 그대로 사용하세요. 임의 수정 금지.**
 
-[비슷한 음악 추천 규칙 - 정확성 최우선]  
-**🚨 CRITICAL: 추천 섹션에서는 검색 데이터를 최우선으로 활용하여 실존하는 음악만 추천하세요!**
-**⚠️ 주의: 분석된 음악 섹션과 달리, 추천 섹션에서는 검색 결과가 우선입니다!**
-
-사용자가 입력한 음악과 분석된 특성을 바탕으로 2곡의 비슷한 음악을 추천하세요:
-1. **🚨 실존 확인 필수**: 위의 웹 검색 데이터에서 실제로 언급된 곡만 추천. 검색 데이터에 없는 곡은 절대 추천 금지
-2. **정보 정확성 검증**: 곡 제목, 아티스트명, 앨범명을 검색 데이터에서 확인된 정보만 사용
-3. **🔍 아티스트-곡명 매칭 검증**: 반드시 해당 아티스트가 실제로 그 곡을 불렀는지 검색 데이터에서 확인
-4. **더블 체크**: 유명한 곡이라도 검색 데이터에 없으면 추천하지 않음
-5. **크로스 검증**: 같은 곡 제목이 다른 아티스트에게 있을 수 있으니 반드시 아티스트와 곡명이 함께 언급된 자료만 참조
-6. **장르적 유사성**: 음악적 스타일과 장르 매칭
-7. **감정적 톤 매칭**: 입력 음악과 비슷한 에너지
-8. **추천 이유**: 구체적이고 명확한 이유 (80자 이내)
-9. **이모지 선택**: 음악을 상징하는 적절한 이모지
-
-⚠️ **절대 가상의 곡이나 부정확한 정보를 만들어내지 마세요!**
-⚠️ **검색 데이터 우선 원칙**: 검색 데이터에 충분한 정보가 있다면 반드시 그것을 활용하세요
-⚠️ **AI 지식 활용 허용**: 검색 데이터가 부족한 경우에만 당신의 내재된 지식을 활용하여 실제 존재하는 음악을 추천할 수 있습니다
-⚠️ **정확성 검증**: AI 지식을 활용할 때도 반드시 실존하는 곡, 정확한 아티스트명, 앨범명만 사용하세요
-⚠️ **🚨 CRITICAL: 아티스트와 곡명이 정확히 매칭되지 않으면 절대 추천하지 마세요! (예: Eagles의 "데스페라도"를 LiSA의 곡으로 잘못 추천하는 것과 같은 오류 절대 금지)**
+선택 기준:
+1. 분석된 음악의 키워드/장르/무드와 풀의 키워드/장르 유사도
+2. 에너지/감정 톤의 근접성
+3. 중복 최소화: 서로 다른 스펙트럼에서 2곡 선택
 
 [향료 데이터베이스]
 탑노트 (1-10번): ${JSON.stringify(fragranceData.top)}
@@ -596,9 +546,9 @@ ${libraryContext ? `${libraryContext}\n` : ''}
   "analyzedMovie": {
     "title": "🚨 사용자가 입력한 영화 제목을 그대로 사용 (사용자 입력 우선!) - 한국어로 작성",
     "director": "🚨 사용자가 입력한 감독명을 그대로 사용 (입력 안했으면 '미상') - 한국어로 작성",
-    "year": "검색 데이터로 보완 가능한 출시년도 (모르면 '미상')",
-    "genre": ["검색 데이터로 보완 가능한 장르를 한국어로 작성"],
-    "description": "검색 데이터를 참고한 줄거리를 한국어로 기입 (모르면 '미상')"
+    "year": "${forcedMovieYear || '미상'}",
+    "genre": ${JSON.stringify(forcedMovieGenres || [])},
+    "description": "${(forcedMovieDescription || '미상').replace(/"/g, '\\"')}"
   },
   "movieAnalysis": {
     "symbolKeywords": ["영화를 상징하는 핵심 키워드들 5-8개 (반드시 한국어로 작성)"],
@@ -747,33 +697,108 @@ ${libraryContext ? `${libraryContext}\n` : ''}
         console.log('제미나이 분석 결과:', analysisResult.analyzedMovie)
         console.log('========================')
       }
-      
-      // 🎵 키워드 기반 음악 재검색
-      if (analysisResult.analyzedMusic?.symbolKeywords && analysisResult.analyzedMusic.symbolKeywords.length > 0 && data.musicTitle) {
-        console.log('🎵 키워드 기반 음악 재검색 시작...')
+      // 미상 보정: 검색에서 확보한 메타데이터로 보강
+      if (analysisResult.analyzedMovie) {
         try {
-          const keywordBasedMusicData = await searchSimilarMusic(
-            data.musicTitle, 
-            data.extractedMusicArtist || data.musicArtist || '', 
-            analysisResult.analyzedMusic.genre,
-            analysisResult.analyzedMusic.symbolKeywords
-          )
-          
-          if (keywordBasedMusicData.length > 0) {
-            console.log(`✅ 키워드 기반 재검색 완료: ${keywordBasedMusicData.length}개 결과`)
-            similarMusicData = keywordBasedMusicData // 기존 검색 결과 대체
-            
-            // 추천 컨텍스트 업데이트
-            if (recommendationContext) {
-              recommendationContext += `\n### 🎵 키워드 기반 음악 참고 자료\n\n`
-              keywordBasedMusicData.forEach((music, idx) => {
-                recommendationContext += `**키워드 참고 ${idx + 1}**: ${music.title}\n${music.text.slice(0, 500)}...\n\n`
-              })
+          const facts = movieSearchData ? extractMovieFacts(movieSearchData, data.movieDirector || undefined) : undefined
+          if (facts) {
+            if ((!analysisResult.analyzedMovie.year || analysisResult.analyzedMovie.year === '미상') && facts.year) {
+              analysisResult.analyzedMovie.year = facts.year
+            }
+            if ((analysisResult.analyzedMovie.genre?.length ?? 0) === 0 && facts.genres?.length) {
+              analysisResult.analyzedMovie.genre = facts.genres
+            }
+            if ((!analysisResult.analyzedMovie.description || analysisResult.analyzedMovie.description === '미상') && facts.description) {
+              analysisResult.analyzedMovie.description = facts.description
             }
           }
-        } catch (error) {
-          console.error('❌ 키워드 기반 음악 재검색 실패:', error)
+        } catch (e) {
+          console.warn('미상 보정 중 오류', e)
         }
+      }
+      
+      // 🎵 웹 기반 재검색 제거 (고정 풀만 사용)
+
+      // 하드코딩 풀 기반 서버 측 유사 추천 산출 (2개씩)
+      try {
+        const moviePicks = pickSimilarMoviesFromPool(
+          recoMovies as RecoMovieItem[],
+          {
+            preferredGenres: data.movieGenres,
+            analyzedMovieGenres: analysisResult.analyzedMovie?.genre,
+            analyzedMovieKeywords: analysisResult.movieAnalysis?.symbolKeywords,
+            excludeTitle: analysisResult.analyzedMovie?.title
+          }
+        )
+        analysisResult.movieRecommendations = moviePicks.map(mapMovieItemToResponse)
+        // 각 항목별 추천 사유 생성 (JSON {"reason":"..."})
+        const reasonModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', generationConfig: { temperature: 0.5, maxOutputTokens: 120 } })
+        const sanitize = (s: string) => s.replace(/```json|```/g, '').trim()
+        const parseReason = (text: string): string | null => {
+          try { const obj = JSON.parse(sanitize(text)); const r = typeof obj?.reason === 'string' ? obj.reason.trim() : ''; return r || null } catch { return null }
+        }
+        for (let i = 0; i < analysisResult.movieRecommendations.length; i++) {
+          const rec = analysisResult.movieRecommendations[i]
+          const rp = `다음 정보를 참고하여 이 영화를 추천한 간결한 이유 1~2문장을 생성하세요. 반드시 한국어 JSON 한 줄: {"reason":"..."}.
+
+[분석된 영화]
+제목: ${analysisResult.analyzedMovie?.title || '없음'}
+감독: ${analysisResult.analyzedMovie?.director || '없음'}
+장르: ${(analysisResult.analyzedMovie?.genre || []).join(', ')}
+키워드: ${(analysisResult.movieAnalysis?.symbolKeywords || []).join(', ')}
+
+[추천 영화]
+제목: ${rec.title}
+감독: ${rec.director}
+장르: ${rec.genre}
+규칙: 사실만, 과장 금지, 1~2문장, 마침표 포함.`
+          try {
+            const rr = await reasonModel.generateContent(rp)
+            const reason = parseReason(rr.response.text())
+            if (reason) rec.reason = reason
+          } catch {}
+        }
+      } catch (e) {
+        console.warn('영화 유사 추천 산출 실패:', e)
+      }
+
+      try {
+        const musicPicks = pickSimilarMusicFromPool(
+          recoMusic as RecoMusicItem[],
+          {
+            analyzedMusicGenre: analysisResult.analyzedMusic?.genre,
+            analyzedMusicKeywords: analysisResult.analyzedMusic?.symbolKeywords,
+            excludeTitle: analysisResult.analyzedMusic?.title,
+            excludeArtist: analysisResult.analyzedMusic?.artist
+          }
+        )
+        analysisResult.musicRecommendations = musicPicks.map(mapMusicItemToResponse)
+        const reasonModel2 = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', generationConfig: { temperature: 0.5, maxOutputTokens: 120 } })
+        const sanitize2 = (s: string) => s.replace(/```json|```/g, '').trim()
+        const parseReason2 = (text: string): string | null => { try { const obj = JSON.parse(sanitize2(text)); const r = typeof obj?.reason === 'string' ? obj.reason.trim() : ''; return r || null } catch { return null } }
+        for (let i = 0; i < analysisResult.musicRecommendations.length; i++) {
+          const rec = analysisResult.musicRecommendations[i]
+          const rp = `다음 정보를 참고하여 이 곡을 추천한 간결한 이유 1~2문장을 생성하세요. 반드시 한국어 JSON 한 줄: {"reason":"..."}.
+
+[분석된 음악]
+제목: ${analysisResult.analyzedMusic?.title}
+아티스트: ${analysisResult.analyzedMusic?.artist}
+장르: ${analysisResult.analyzedMusic?.genre}
+키워드: ${(analysisResult.analyzedMusic?.symbolKeywords || []).join(', ')}
+
+[추천 음악]
+제목: ${rec.title}
+아티스트: ${rec.artist}
+앨범: ${rec.album}
+규칙: 사실만, 과장 금지, 1~2문장, 마침표 포함.`
+          try {
+            const rr = await reasonModel2.generateContent(rp)
+            const reason = parseReason2(rr.response.text())
+            if (reason) rec.reason = reason
+          } catch {}
+        }
+      } catch (e) {
+        console.warn('음악 유사 추천 산출 실패:', e)
       }
     } catch (parseError) {
       console.error('JSON 파싱 오류:', parseError)

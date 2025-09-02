@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`🔍 검색 요청: ${type}`, { query, youtubeUrl, artist })
 
-    const results: any = {}
+    const results: Record<string, unknown> = {}
 
     switch (type) {
       case 'movie':

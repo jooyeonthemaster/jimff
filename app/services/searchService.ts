@@ -3,20 +3,20 @@ import Exa from 'exa-js'
 // Exa 클라이언트 초기화
 const exa = new Exa(process.env.EXA_API_KEY!)
 
-interface SearchResult {
+export interface SearchResult {
   title: string
   url: string
   text: string
   publishedDate?: string
 }
 
-interface MovieSearchData {
+export interface MovieSearchData {
   basicInfo: SearchResult[]
   reviews: SearchResult[]
   analysis: SearchResult[]
 }
 
-interface MusicSearchData {
+export interface MusicSearchData {
   basicInfo: SearchResult[]
   lyrics: SearchResult[]
   analysis: SearchResult[]
@@ -26,12 +26,14 @@ interface MusicSearchData {
 /**
  * 영화 관련 웹 데이터 검색
  */
-export async function searchMovieData(movieTitle: string): Promise<MovieSearchData> {
+export async function searchMovieData(movieTitle: string, directorHint?: string): Promise<MovieSearchData> {
   console.log(`🎬 영화 검색 시작: ${movieTitle}`)
   
   try {
     // 1. 영화 기본 정보 검색
-    const basicInfoQuery = `${movieTitle} 영화 정보 감독 출연진 줄거리`
+    const basicInfoQuery = directorHint
+      ? `${movieTitle} ${directorHint} 감독 영화 정보 줄거리 개봉연도`
+      : `${movieTitle} 영화 정보 감독 출연진 줄거리`
     const basicInfo = await exa.searchAndContents(basicInfoQuery, {
       type: 'auto',
       numResults: 3,
@@ -42,7 +44,9 @@ export async function searchMovieData(movieTitle: string): Promise<MovieSearchDa
     })
 
     // 2. 영화 리뷰 검색
-    const reviewsQuery = `${movieTitle} 영화 리뷰 평점 관람객 반응`
+    const reviewsQuery = directorHint
+      ? `${movieTitle} ${directorHint} 영화 리뷰 평점 관람객 반응`
+      : `${movieTitle} 영화 리뷰 평점 관람객 반응`
     const reviews = await exa.searchAndContents(reviewsQuery, {
       type: 'auto',
       numResults: 3,
@@ -53,7 +57,9 @@ export async function searchMovieData(movieTitle: string): Promise<MovieSearchDa
     })
 
     // 3. 영화 분석 및 해석 검색
-    const analysisQuery = `${movieTitle} 영화 분석 의미 상징 테마 해석`
+    const analysisQuery = directorHint
+      ? `${movieTitle} ${directorHint} 영화 분석 의미 상징 테마 해석`
+      : `${movieTitle} 영화 분석 의미 상징 테마 해석`
     const analysis = await exa.searchAndContents(analysisQuery, {
       type: 'auto',
       numResults: 2,
@@ -63,10 +69,26 @@ export async function searchMovieData(movieTitle: string): Promise<MovieSearchDa
       textLength: 2000
     })
 
+    let basic = formatSearchResults(basicInfo.results)
+    let rev = formatSearchResults(reviews.results)
+    let ana = formatSearchResults(analysis.results)
+
+    if (directorHint) {
+      const filterByDirector = (arr: SearchResult[]) => {
+        const f = arr.filter(r => (r.title + ' ' + r.text).toLowerCase().includes(directorHint.toLowerCase()))
+        return f.length > 0 ? f : arr
+      }
+      basic = filterByDirector(basic)
+      rev = filterByDirector(rev)
+      ana = filterByDirector(ana)
+    }
+
+    console.log(`🎬 영화 검색 완료: ${basic.length + rev.length + ana.length}개 결과`)
+
     return {
-      basicInfo: formatSearchResults(basicInfo.results),
-      reviews: formatSearchResults(reviews.results),
-      analysis: formatSearchResults(analysis.results)
+      basicInfo: basic,
+      reviews: rev,
+      analysis: ana
     }
   } catch (error) {
     console.error('영화 검색 중 오류:', error)
@@ -93,7 +115,7 @@ export async function searchMusicData(musicTitle: string, artist?: string): Prom
       `${searchTerm} 음악 정보 장르`
     ]
     
-    let basicInfoResults: any[] = []
+    const basicInfoResults: Array<{ title?: string | null; url?: string | null; text?: string | null; publishedDate?: string | null }> = []
     for (const query of basicInfoQueries) {
       try {
         const result = await exa.searchAndContents(query, {
@@ -236,11 +258,11 @@ export async function searchFragranceKnowledge(): Promise<SearchResult[]> {
  * 검색 결과 포맷팅
  */
 function formatSearchResults(results: unknown[]): SearchResult[] {
-  return results.map((result: any) => ({
+  return (results as Array<{ title?: string | null; url?: string | null; text?: string | null; publishedDate?: string | null }>).map((result) => ({
     title: result.title || '',
     url: result.url || '',
     text: result.text || '',
-    publishedDate: result.publishedDate
+    publishedDate: result.publishedDate || undefined
   }))
   .filter(result => result.text.length > 100) // 너무 짧은 결과 필터링
   .filter(result => {
@@ -253,14 +275,143 @@ function formatSearchResults(results: unknown[]): SearchResult[] {
                            text.includes('영화') || text.includes('추천') || text.includes('리스트') ||
                            text.includes('song') || text.includes('track') || text.includes('artist') ||
                            text.includes('movie') || text.includes('film') || text.includes('recommendation') ||
+                           text.includes('감독') || text.includes('연도') || text.includes('개봉') ||
+                           text.includes('줄거리') || text.includes('synopsis') || text.includes('plot') ||
                            title.includes('곡') || title.includes('음악') || title.includes('노래') ||
                            title.includes('영화') || title.includes('추천') || title.includes('리스트') ||
                            title.includes('song') || title.includes('track') || title.includes('artist') ||
-                           title.includes('movie') || title.includes('film') || title.includes('recommendation')
+                           title.includes('movie') || title.includes('film') || title.includes('recommendation') ||
+                           title.includes('synopsis') || title.includes('plot')
     
     // 관련 정보가 있거나 충분히 긴 텍스트는 포함 (기준 완화)
     return hasRelevantInfo || result.text.length > 300
   })
+}
+
+/**
+ * 영화 검색 데이터에서 연도/장르/줄거리 등 핵심 메타데이터를 추출
+ */
+export function extractMovieFacts(movieData: MovieSearchData, directorHint?: string): {
+  year?: string
+  genres?: string[]
+  description?: string
+} {
+  try {
+    const blobs = [
+      ...(movieData.basicInfo || []),
+      ...(movieData.analysis || []),
+      ...(movieData.reviews || [])
+    ]
+      .map(r => `${r.title}\n${r.text}`)
+      .join('\n\n')
+      .replace(/\s+/g, ' ')
+
+    const facts: { year?: string; genres?: string[]; description?: string } = {}
+
+    // 연도 산출: 각 문서 조각별로 후보 연도와 컨텍스트 가중치를 합산하여 최고 점수 선정
+    type YearScore = { score: number }
+    const yearScores: Record<string, YearScore> = {}
+    const strongKeywords = ['개봉','공개','개봉일','출시','release','released','premiere','theatrical']
+    const jpStrong = ['公開','上映','初公開']
+    const weakKeywords = ['영화제','festival','시사회','프리미어']
+
+    const addScore = (year: string, inc: number) => {
+      if (!year) return
+      if (!yearScores[year]) yearScores[year] = { score: 0 }
+      yearScores[year].score += inc
+    }
+
+    const docs = [
+      ...(movieData.basicInfo || []),
+      ...(movieData.analysis || []),
+      ...(movieData.reviews || [])
+    ]
+
+    for (const doc of docs) {
+      const content = `${doc.title || ''} ${doc.text || ''}`
+      const publishedYear = doc.publishedDate ? String(new Date(doc.publishedDate).getFullYear()) : ''
+      if (publishedYear && /^(19|20)\d{2}$/.test(publishedYear)) addScore(publishedYear, 1) // 약한 신호
+
+      const re = /(19\d{2}|20\d{2})/g
+      let m: RegExpExecArray | null
+      while ((m = re.exec(content)) !== null) {
+        const year = m[1]
+        const start = Math.max(0, m.index - 40)
+        const end = Math.min(content.length, m.index + 40)
+        const window = content.slice(start, end).toLowerCase()
+        let score = 1
+        if (strongKeywords.some(k => window.includes(k))) score += 3
+        if (jpStrong.some(k => window.includes(k))) score += 3
+        if (weakKeywords.some(k => window.includes(k))) score += 1
+        if (directorHint && window.includes(directorHint.toLowerCase())) score += 1
+        addScore(year, score)
+      }
+    }
+
+    const bestYear = Object.entries(yearScores)
+      .filter(([y]) => Number(y) >= 1900 && Number(y) <= 2099)
+      .sort((a,b) => b[1].score - a[1].score)[0]?.[0]
+    if (bestYear) facts.year = bestYear
+
+    // 장르: 한글/영문 키워드 매핑
+    const genreDict: Record<string, string> = {
+      '스릴러': '스릴러', 'thriller': '스릴러',
+      '드라마': '드라마', 'drama': '드라마',
+      '로맨스': '로맨스', 'romance': '로맨스',
+      '코미디': '코미디', 'comedy': '코미디',
+      '범죄': '범죄', 'crime': '범죄',
+      '액션': '액션', 'action': '액션',
+      '공포': '공포', 'horror': '공포',
+      'SF': 'SF', 'sci-fi': 'SF', 'science fiction': 'SF',
+      '판타지': '판타지', 'fantasy': '판타지',
+      '느와르': '느와르', 'noir': '느와르',
+      '뮤지컬': '뮤지컬', 'musical': '뮤지컬'
+    }
+    const found = new Set<string>()
+    for (const [k, v] of Object.entries(genreDict)) {
+      const re = new RegExp(`(?:^|[^가-힣A-Za-z])${k}(?:$|[^가-힣A-Za-z])`, 'i')
+      if (re.test(blobs)) found.add(v)
+    }
+    if (found.size > 0) facts.genres = Array.from(found)
+
+    // 줄거리: '줄거리', '시놉시스', 'synopsis', 'plot' 이후 2-4문장 추출
+    const descAnchors = [
+      /줄거리\s*[:：]?\s*([^\n]{80,600})/i,
+      /시놉시스\s*[:：]?\s*([^\n]{80,600})/i,
+      /synopsis\s*[:：]?\s*([^\n]{80,600})/i,
+      /plot\s*[:：]?\s*([^\n]{80,600})/i,
+      /あらすじ\s*[:：]?\s*([^\n]{80,600})/i
+    ]
+    for (const re of descAnchors) {
+      const m = blobs.match(re)
+      if (m && m[1]) {
+        facts.description = truncateForSynopsis(cleanSynopsis(m[1]))
+        break
+      }
+    }
+    if (!facts.description) {
+      // 분석 섹션 텍스트에서 문장 몇 개 발췌
+      const firstAnalysis = (movieData.analysis?.[0]?.text || movieData.basicInfo?.[0]?.text || '')
+      if (firstAnalysis) facts.description = truncateForSynopsis(cleanSynopsis(firstAnalysis))
+    }
+
+    return facts
+  } catch (e) {
+    console.error('extractMovieFacts error:', e)
+    return {}
+  }
+}
+
+function cleanSynopsis(text: string): string {
+  return text
+    .replace(/\s+/g, ' ')
+    .replace(/続きを読む|더 보기|더보기|접기|\.{3,}$/g, '')
+    .trim()
+}
+
+function truncateForSynopsis(text: string, maxLen = 280): string {
+  if (text.length <= maxLen) return text
+  return text.slice(0, maxLen - 1).trim() + '…'
 }
 
 /**
@@ -302,7 +453,7 @@ function parseArtistAndTitle(title: string): { artist: string; title: string } {
 /**
  * 비슷한 영화 추천을 위한 웹 검색 - 다단계 검색 전략
  */
-export async function searchSimilarMovies(movieTitle: string, genres: string[]): Promise<SearchResult[]> {
+export async function searchSimilarMovies(movieTitle: string, genres: string[], directorHint?: string): Promise<SearchResult[]> {
   console.log(`🎬 비슷한 영화 검색: ${movieTitle}, 장르: ${genres.join(', ')}`)
   
   try {
@@ -311,9 +462,9 @@ export async function searchSimilarMovies(movieTitle: string, genres: string[]):
     
     // 1단계: 구체적인 영화 기반 검색
     const specificQueries = [
-      `${movieTitle} 비슷한 영화 추천 ${genreQuery}`,
-      `${movieTitle} 같은 장르 영화 추천`,
-      `"${movieTitle}" similar movies recommendations`
+      `${movieTitle} ${directorHint ? directorHint + ' ' : ''}비슷한 영화 추천 ${genreQuery}`,
+      `${movieTitle} ${directorHint ? directorHint + ' ' : ''}같은 장르 영화 추천`,
+      `"${movieTitle}" ${directorHint ? directorHint + ' ' : ''}similar movies recommendations`
     ]
     
     for (const query of specificQueries) {
@@ -384,10 +535,19 @@ export async function searchSimilarMovies(movieTitle: string, genres: string[]):
       }
     }
     
+    // 감독 힌트가 있으면 포함하는 결과를 우선 정렬
+    const prioritized = directorHint
+      ? allResults.sort((a, b) => {
+          const ai = ((a.title + ' ' + a.text).toLowerCase().includes(directorHint.toLowerCase())) ? 1 : 0
+          const bi = ((b.title + ' ' + b.text).toLowerCase().includes(directorHint.toLowerCase())) ? 1 : 0
+          return bi - ai
+        })
+      : allResults
+
     // 중복 제거 및 최대 개수 제한
     const uniqueResults = Array.from(
-      new Map(allResults.map(result => [result.url, result])).values()
-    ).slice(0, 12) // 더 많은 데이터 제공
+      new Map(prioritized.map(result => [result.url, result])).values()
+    ).slice(0, 12)
     
     console.log(`🎬 영화 검색 완료: ${uniqueResults.length}개 결과`)
     return uniqueResults
@@ -519,7 +679,7 @@ export async function searchSimilarMusic(musicTitle: string, artist: string, gen
     // 중복 제거 및 최대 개수 제한
     const uniqueResults = Array.from(
       new Map(allResults.map(result => [result.url, result])).values()
-    ).slice(0, 12) // 더 많은 데이터 제공
+    ).slice(0, 12)
 
     console.log(`🎵 음악 검색 완료: ${uniqueResults.length}개 결과`)
     return uniqueResults

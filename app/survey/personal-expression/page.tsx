@@ -51,13 +51,22 @@ export default function PersonalExpressionPage() {
       // 최종 데이터 저장
       const finalData = saveData()
       
+      // 감정 응답 합성 및 누락 방지 필드 구성
+      const emotionalResponseParts: string[] = []
+      if (finalData.favoriteScene) emotionalResponseParts.push(`가장 좋아한 장면: ${finalData.favoriteScene}`)
+      if (finalData.musicColor) emotionalResponseParts.push(`음악의 색감: ${finalData.musicColor}`)
+      if (finalData.movieMeaning) emotionalResponseParts.push(`영화의 의미: ${finalData.movieMeaning}`)
+      const emotionalResponse = emotionalResponseParts.join(' | ')
+
       // 유튜브 추출 정보가 있다면 함께 전달
-                        const dataWithExtracted = {
-                    ...finalData,
-                    extractedMusicTitle: finalData.extractedMusicTitle || null,
-                    extractedMusicArtist: finalData.extractedMusicArtist || null,
-                    movieTitle: finalData.movieTitle || null
-                  }
+      const dataWithExtracted = {
+        ...finalData,
+        extractedMusicTitle: finalData.extractedMusicTitle || null,
+        extractedMusicArtist: finalData.extractedMusicArtist || null,
+        movieTitle: finalData.movieTitle || null,
+        movieDirector: finalData.movieDirector || null,
+        emotionalResponse: emotionalResponse || finalData.emotionalResponse || null
+      }
       
       // API 호출
       const response = await fetch('/api/analyze-preferences', {
